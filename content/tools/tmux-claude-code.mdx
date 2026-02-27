@@ -1,0 +1,396 @@
+# tmux를 활용한 Claude Code 사용법 가이드
+
+> tmux와 Claude Code를 함께 사용하여 개발 생산성을 극대화하는 가이드
+>
+> tmux 자체의 설치, 명령어, 설정, 영속성은 → [tmux-guide.md](./tmux-guide.md) 참고
+
+---
+
+## 목차
+
+1. [왜 tmux + Claude Code인가?](#1-왜-tmux--claude-code인가)
+2. [활용 패턴 1: 멀티 패널 워크스페이스](#2-활용-패턴-1-멀티-패널-워크스페이스)
+3. [활용 패턴 2: 세션 유지로 장기 작업 보호](#3-활용-패턴-2-세션-유지로-장기-작업-보호)
+4. [활용 패턴 3: 여러 Claude Code 인스턴스 병렬 실행](#4-활용-패턴-3-여러-claude-code-인스턴스-병렬-실행)
+5. [활용 패턴 4: 비대화형(Print) 모드 활용](#5-활용-패턴-4-비대화형print-모드-활용)
+   - [5.1. Claude Code의 `--tmux` 플래그 활용](#51-claude-code의---tmux-플래그-활용)
+6. [실전 워크플로우 시나리오](#6-실전-워크플로우-시나리오)
+7. [iTerm2 최적 구성](#7-iterm2-최적-구성)
+
+---
+
+## 1. 왜 tmux + Claude Code인가?
+
+Claude Code는 터미널 기반 AI 코딩 어시스턴트입니다. 터미널에서 동작하기 때문에, 터미널 멀티플렉서인 **tmux**와 함께 사용하면 시너지가 극대화됩니다.
+
+### tmux 없이 사용할 때의 불편함
+
+- 터미널 하나에서 Claude Code를 실행하면 **다른 작업을 할 수 없음**
+- SSH 접속이 끊기면 **진행 중인 작업이 사라짐**
+- 여러 프로젝트를 동시에 작업하려면 **터미널 창을 여러 개 열어야 함**
+- Claude Code가 작업 중일 때 **결과를 확인하기 어려움**
+
+### tmux와 함께 사용할 때의 장점
+
+| 장점 | 설명 |
+|------|------|
+| **세션 유지** | SSH 연결이 끊겨도 Claude Code가 계속 동작 |
+| **멀티태스킹** | 한 화면에서 Claude Code + 에디터 + 터미널 동시 사용 |
+| **병렬 작업** | 여러 Claude Code 인스턴스를 동시에 실행 |
+| **작업 전환** | 프로젝트별 세션을 만들어 빠르게 전환 |
+| **모니터링** | Claude Code 작업 진행을 다른 패널에서 실시간 확인 |
+
+---
+
+## 2. 활용 패턴 1: 멀티 패널 워크스페이스
+
+가장 기본적이고 강력한 패턴입니다. **한 화면에서 Claude Code와 다른 도구를 동시에 사용**합니다.
+
+### 기본 2분할 레이아웃
+
+Claude Code를 왼쪽에, 코드 에디터나 다른 터미널을 오른쪽에 배치합니다.
+
+```bash
+# 1. 새 세션 시작
+tmux new -s dev
+
+# 2. Claude Code 실행
+claude
+
+# 3. 세로 분할 (Prefix + %)
+# 4. 오른쪽 패널에서 에디터 실행
+vim src/main.py
+```
+
+결과 화면:
+
+```
+┌──────────────────┬──────────────────┐
+│                  │                  │
+│   Claude Code    │   vim / 에디터    │
+│                  │                  │
+│  AI와 대화하며    │  코드를 직접      │
+│  코드 작성 지시   │  확인하고 수정    │
+│                  │                  │
+└──────────────────┴──────────────────┘
+```
+
+### 3분할 레이아웃 (추천)
+
+```bash
+# 1. 새 세션 시작
+tmux new -s dev
+
+# 2. Claude Code 실행 (왼쪽 메인 영역)
+claude
+
+# 3. 세로 분할 (Prefix + %)
+# 4. 오른쪽에서 에디터 실행
+vim .
+
+# 5. 오른쪽 패널을 다시 가로 분할 (Prefix + ")
+# 6. 아래쪽에서 테스트/빌드 명령어 실행
+npm test --watch
+```
+
+결과 화면:
+
+```
+┌──────────────────┬──────────────────┐
+│                  │                  │
+│                  │   vim / 에디터    │
+│   Claude Code    │                  │
+│                  ├──────────────────┤
+│                  │                  │
+│                  │   터미널/테스트   │
+│                  │   npm test       │
+└──────────────────┴──────────────────┘
+```
+
+### 패널 간 이동 팁
+
+- `Prefix + 방향키`로 패널 간 빠르게 전환
+- `Prefix + z`로 현재 패널을 전체 화면으로 확대 (다시 누르면 원복)
+  - Claude Code 출력이 길 때 전체 화면으로 보고, 확인 후 원복하면 편리
+
+---
+
+## 3. 활용 패턴 2: 세션 유지로 장기 작업 보호
+
+Claude Code로 대규모 리팩토링이나 긴 작업을 할 때, **세션이 끊겨도 작업이 유지**됩니다.
+
+### 시나리오: SSH 원격 서버에서 작업
+
+```bash
+# SSH로 서버 접속
+ssh user@server
+
+# tmux 세션 생성
+tmux new -s refactor
+
+# Claude Code 실행 후 대규모 작업 지시
+claude
+# > "이 프로젝트의 모든 JavaScript 파일을 TypeScript로 변환해줘"
+
+# 네트워크 끊김 발생! 하지만 걱정 없음
+
+# 다시 SSH 접속 후
+ssh user@server
+tmux attach -t refactor
+# → Claude Code가 계속 작업 중인 화면이 그대로 보임!
+```
+
+### 시나리오: 퇴근 전 작업 걸어두기
+
+```bash
+# tmux 세션에서 Claude Code로 긴 작업 지시
+tmux new -s overnight
+claude
+# > "전체 테스트 스위트를 실행하고 실패하는 테스트를 수정해줘"
+
+# Prefix + d 로 세션 분리 (Claude Code는 계속 실행됨)
+# 컴퓨터 닫지 않고 퇴근
+
+# 다음 날 출근 후
+tmux attach -t overnight
+# → 결과 확인!
+```
+
+### `--continue`와 `--resume`으로 대화 이어가기
+
+tmux 세션 유지와 함께, Claude Code의 대화 복원 기능을 활용하면 더욱 강력합니다.
+
+```bash
+# 가장 최근 대화를 이어서 시작
+claude --continue
+
+# 특정 대화를 선택하여 이어가기 (대화 목록에서 선택)
+claude --resume
+```
+
+> **팁**: `--continue`는 마지막 대화를 자동 선택하고, `--resume`은 과거 대화 목록에서 직접 선택할 수 있습니다.
+
+---
+
+## 4. 활용 패턴 3: 여러 Claude Code 인스턴스 병렬 실행
+
+**서로 다른 작업을 여러 Claude Code 인스턴스에서 동시에 수행**할 수 있습니다.
+
+### 프로젝트별 세션 분리
+
+```bash
+# 프론트엔드 프로젝트용 세션
+tmux new -s frontend -d
+tmux send-keys -t frontend 'cd ~/projects/frontend && claude' Enter
+
+# 백엔드 프로젝트용 세션
+tmux new -s backend -d
+tmux send-keys -t backend 'cd ~/projects/backend && claude' Enter
+
+# 세션 간 전환
+tmux attach -t frontend   # 프론트엔드 작업
+# Prefix + d → 분리
+tmux attach -t backend    # 백엔드 작업
+```
+
+### 같은 프로젝트에서 병렬 작업
+
+```bash
+tmux new -s parallel
+
+# 윈도우 1: 기능 개발
+claude
+# > "새로운 인증 모듈을 만들어줘"
+
+# 새 윈도우 생성 (Prefix + c)
+# 윈도우 2: 버그 수정
+claude
+# > "로그인 페이지의 CSS 버그를 수정해줘"
+
+# 새 윈도우 생성 (Prefix + c)
+# 윈도우 3: 테스트 작성
+claude
+# > "utils 폴더의 단위 테스트를 작성해줘"
+```
+
+> **주의**: 같은 프로젝트에서 여러 Claude Code를 실행할 때는 **파일 충돌**에 주의하세요. 서로 다른 파일을 수정하는 작업을 각각 맡기는 것이 안전합니다.
+
+---
+
+## 5. 활용 패턴 4: 비대화형(Print) 모드 활용
+
+Claude Code의 `-p` (`--print`) 플래그와 tmux를 결합하면, **완전한 비대화형 자동화**가 가능합니다.
+
+### 백그라운드 작업 실행
+
+```bash
+tmux new -s auto -d
+tmux send-keys -t auto \
+  'claude -p "이 프로젝트의 README.md를 업데이트해줘" --allowedTools Edit,Write,Read,Bash' \
+  Enter
+
+# 나중에 결과 확인
+tmux attach -t auto
+```
+
+### 파이프라인과 조합
+
+```bash
+tmux new -s pipeline -d
+tmux send-keys -t pipeline '
+claude -p "린트 오류를 모두 수정해줘" --allowedTools Edit,Read,Bash && \
+claude -p "수정된 파일에 대한 테스트를 작성해줘" --allowedTools Edit,Write,Read,Bash && \
+echo "모든 작업 완료!"
+' Enter
+```
+
+---
+
+## 5.1. Claude Code의 `--tmux` 플래그 활용
+
+Claude Code는 자체적으로 `--tmux` 플래그를 지원합니다. 이 플래그를 사용하면 **worktree 생성 시 자동으로 tmux 세션에서 실행**됩니다.
+
+> **중요**: `--tmux`는 반드시 `--worktree` (`-w`)와 함께 사용해야 합니다.
+
+### 기본 사용법
+
+```bash
+# worktree + tmux 세션에서 Claude Code 실행
+claude --worktree --tmux
+# 또는 축약형
+claude -w --tmux
+
+# 전통적인 tmux 방식으로 강제 실행
+claude -w --tmux=classic
+```
+
+### 여러 작업을 동시에 격리 실행
+
+```bash
+# 기능 A 작업 (별도 worktree + tmux 세션)
+claude -w --tmux
+
+# 기능 B 작업 (또 다른 worktree + tmux 세션)
+claude -w --tmux
+```
+
+| 장점 | 설명 |
+|------|------|
+| **브랜치 격리** | 각 작업이 별도 git worktree에서 실행되어 충돌 방지 |
+| **세션 자동 관리** | tmux 세션 생성/관리를 Claude Code가 자동 처리 |
+| **병렬 안전성** | 같은 프로젝트에서도 파일 충돌 걱정 없이 병렬 작업 가능 |
+
+> **참고**: `--worktree`는 git 저장소에서만 동작합니다.
+
+---
+
+## 6. 실전 워크플로우 시나리오
+
+### 시나리오 A: 풀스택 개발 워크플로우
+
+```bash
+#!/bin/bash
+SESSION="fullstack"
+
+tmux new-session -d -s $SESSION -n "claude"
+tmux send-keys -t $SESSION:claude "cd ~/project && claude" Enter
+
+tmux new-window -t $SESSION -n "frontend"
+tmux send-keys -t $SESSION:frontend "cd ~/project/frontend && npm run dev" Enter
+
+tmux new-window -t $SESSION -n "backend"
+tmux send-keys -t $SESSION:backend "cd ~/project/backend && npm run dev" Enter
+
+tmux new-window -t $SESSION -n "logs"
+tmux send-keys -t $SESSION:logs "cd ~/project && tail -f logs/*.log" Enter
+
+tmux select-window -t $SESSION:claude
+tmux attach -t $SESSION
+```
+
+이 스크립트를 `dev-start.sh`로 저장하면 **한 번에 전체 개발 환경이 세팅**됩니다.
+
+### 시나리오 B: 코드 리뷰 워크플로우
+
+```bash
+tmux new -s review
+
+# 왼쪽: Claude Code로 코드 리뷰 요청
+claude
+# > "PR #42의 변경사항을 리뷰해줘"
+
+# Prefix + % (세로 분할)
+# 오른쪽: git diff 확인
+git diff main...feature-branch
+
+# Prefix + " (오른쪽을 가로 분할)
+# 오른쪽 아래: 테스트 실행
+npm test
+```
+
+### 시나리오 C: 디버깅 워크플로우
+
+```bash
+tmux new -s debug
+
+# 상단: Claude Code
+claude
+# > "이 에러 로그를 분석하고 원인을 찾아줘"
+
+# Prefix + " (가로 분할)
+# 하단: 실시간 로그 모니터링
+tail -f /var/log/app/error.log
+```
+
+---
+
+## 7. iTerm2 최적 구성
+
+> iTerm2의 tmux 통합 모드(`tmux -CC`) 상세 설명은 → [tmux-guide.md#7-iterm2-통합-모드-tmux--cc](./tmux-guide.md#7-iterm2-통합-모드-tmux--cc) 참고
+
+macOS에서 Claude Code를 사용한다면, iTerm2의 네이티브 분할 기능과 tmux를 결합한 구성이 최적입니다.
+
+### 추천 구성: 5탭 (tmux -CC 통합 모드)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ [탭0: tmux 제어] [탭1: Claude] [탭2: 코드] [탭3: 서버/테스트] [탭4: Git] │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+| 탭 | 역할 | 세션 영속성 |
+|----|------|-----------|
+| **탭 0** | tmux 제어 (`tmux -CC`) | - (닫으면 detach) |
+| **탭 1** | Claude Code | ✅ tmux 보호 |
+| **탭 2** | 코드 편집 | ✅ tmux 보호 |
+| **탭 3** | 서버/테스트 | ✅ tmux 보호 |
+| **탭 4** | Git/유틸리티 | ✅ tmux 보호 |
+
+### 구성 단계
+
+```bash
+# 1단계: tmux 통합 모드로 세션 시작 (→ 탭 0)
+tmux -CC new -s dev
+
+# 2단계: 자동으로 새 탭 열림 (→ 탭 1), Claude Code 실행
+claude
+
+# 3~4단계: tmux 새 윈도우로 탭 2~4 생성
+tmux new-window -t dev   # → 탭 2: 코드 편집
+tmux new-window -t dev   # → 탭 3: 서버/테스트
+tmux new-window -t dev   # → 탭 4: Git
+```
+
+> **중요**: 탭 0(tmux 제어 탭)은 닫지 마세요. 닫으면 세션에서 분리(detach)됩니다.
+
+### 언제 어떤 구성을 쓸까?
+
+| 상황 | 추천 구성 |
+|------|----------|
+| 로컬에서 단순 개발 | iTerm2 네이티브 탭만 사용 |
+| 로컬에서 장기 작업 | iTerm2 + tmux 통합 5탭 |
+| SSH 원격 서버 작업 | tmux 필수 |
+
+---
+
+*tmux 버전 3.0 이상, Claude Code 최신 버전 기준으로 작성되었습니다.*

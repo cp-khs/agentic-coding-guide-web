@@ -1,0 +1,461 @@
+# MCP 서버 Node.js 버전 트러블슈팅
+
+> **Claude Code에서 MCP 서버가 `failed`로 표시될 때 해결 방법**
+> npm 기반 MCP 서버의 node 버전 충돌 원인 분석 및 wrapper 스크립트 패턴
+
+---
+
+## 목차
+
+1. [증상](#1-증상)
+2. [원인 분석](#2-원인-분석)
+3. [해결 방법: wrapper 스크립트 패턴](#3-해결-방법-wrapper-스크립트-패턴)
+4. [단계별 적용 가이드](#4-단계별-적용-가이드)
+5. [함정 주의사항](#5-함정-주의사항)
+6. [다른 MCP 서버에 적용하기](#6-다른-mcp-서버에-적용하기)
+
+---
+
+## 1. 증상
+
+Claude Code MCP 설정 화면(`/mcp`)에서 특정 서버가 다음과 같이 표시됩니다:
+
+```
+chrome-devtools · ✘ failed
+playwright       · ✔ connected
+```
+
+로그를 확인하면 node 버전 관련 오류가 발생합니다:
+
+```
+SyntaxError: Unexpected token ...
+    at compileSourceTextModule (node:internal/modules/esm/...)
+```
+
+또는 패키지가 요구하는 최소 node 버전 불충족 오류가 발생합니다.
+
+---
+
+## 2. 원인 분석
+
+### Claude Code 내장 node 문제
+
+Claude Code는 자체 내장 node를 보유하고 있으며, MCP 서버 실행 시 이 내장 node를 **PATH 앞에 주입**합니다.
+
+```
+[일반 터미널]
+PATH: /Users/khs/.nvm/versions/node/v20.19.2/bin → /usr/local/bin → ...
+→ node = v20.19.2 (원하는 버전)
+
+[Claude Code 내부]
+PATH: /claude/internal/node/bin → /Users/khs/.nvm/... → ...
+→ node = Claude Code 내장 버전 (제어 불가)
+```
+
+### 왜 npx 절대 경로도 효과 없는가?
+
+`.claude.json`에서 `"command": "/Users/khs/.nvm/versions/node/v20.19.2/bin/npx"`로 지정해도 실패합니다. `npx`가 내부적으로 `node`를 실행할 때 다시 PATH에서 찾기 때문입니다.
+
+### 왜 `#!/usr/bin/env node`도 효과 없는가?
+
+npm 전역 설치 시 생성되는 실행 파일의 shebang은 `#!/usr/bin/env node`입니다. `env`는 PATH에서 `node`를 검색하므로 Claude Code가 주입한 내장 node가 선택됩니다.
+
+```
+#!/usr/bin/env node   ← PATH에서 node 검색 → Claude Code 내장 node 선택 ❌
+#!/bin/bash           ← bash 실행 → 내부에서 절대 경로 node 호출 ✅
+```
+
+---
+
+## 3. 해결 방법: wrapper 스크립트 패턴
+
+**핵심 원리**: `#!/bin/bash`로 시작하는 스크립트에서 node의 **절대 경로**를 직접 호출하면 PATH 검색을 우회합니다.
+
+```bash
+#!/bin/bash
+exec /Users/khs/.nvm/versions/node/v20.19.2/bin/node \
+  /usr/local/lib/node_modules/패키지명/build/src/index.js "$@"
+```
+
+이 방식의 동작 흐름:
+
+```
+Claude Code
+    ↓ command: "/usr/local/bin/chrome-devtools-mcp"
+bash 실행 (PATH 무관)
+    ↓ exec
+/Users/khs/.nvm/.../node (절대 경로 → PATH 검색 없음)
+    ↓
+MCP 서버 정상 실행 ✅
+```
+
+---
+
+## 4. 단계별 적용 가이드
+
+### Step 1: 패키지를 원하는 node 버전으로 전역 설치
+
+```bash
+# v20 LTS 권장 (안정성)
+/Users/khs/.nvm/versions/node/v20.19.2/bin/npm install -g chrome-devtools-mcp
+```
+
+설치 경로 확인:
+
+```bash
+/Users/khs/.nvm/versions/node/v20.19.2/bin/npm list -g chrome-devtools-mcp
+# → /usr/local/lib
+# └── chrome-devtools-mcp@0.17.3
+```
+
+### Step 2: 패키지의 실제 엔트리포인트 확인
+
+```bash
+python3 -c "
+import json
+with open('/usr/local/lib/node_modules/chrome-devtools-mcp/package.json') as f:
+    pkg = json.load(f)
+print('bin:', pkg.get('bin'))
+"
+# → bin: ./build/src/index.js
+```
+
+### Step 3: 기존 심볼릭 링크 제거 후 wrapper 파일 생성
+
+> ⚠️ **중요**: npm 전역 설치는 `/usr/local/bin/패키지명`을 심볼릭 링크로 만듭니다.
+> 심볼릭 링크가 있는 상태에서 파일을 쓰면 원본(`index.js`)이 오염되므로, 반드시 먼저 제거합니다.
+
+```bash
+python3 -c "
+import os, stat
+
+bin_path = '/usr/local/bin/chrome-devtools-mcp'
+entry_path = '/usr/local/lib/node_modules/chrome-devtools-mcp/build/src/index.js'
+node_path = '/Users/khs/.nvm/versions/node/v20.19.2/bin/node'
+
+# 1. 심볼릭 링크 확인 및 제거
+if os.path.islink(bin_path):
+    os.unlink(bin_path)
+    print('symlink removed')
+
+# 2. wrapper 스크립트 작성
+content = '#!/bin/bash\nexec ' + node_path + ' ' + entry_path + ' \"\$@\"\n'
+with open(bin_path, 'w') as f:
+    f.write(content)
+
+# 3. 실행 권한 부여
+os.chmod(bin_path, os.stat(bin_path).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+print('wrapper created:', oct(os.stat(bin_path).st_mode))
+"
+```
+
+### Step 4: wrapper 스크립트 동작 확인
+
+```bash
+/usr/local/bin/chrome-devtools-mcp --version
+# → 0.17.3  (버전 출력되면 정상)
+```
+
+### Step 5: `.claude.json` MCP 설정 업데이트
+
+```bash
+python3 -c "
+import json
+
+with open('/Users/khs/.claude.json', 'r') as f:
+    data = json.load(f)
+
+data['mcpServers']['chrome-devtools'] = {
+    'type': 'stdio',
+    'command': '/usr/local/bin/chrome-devtools-mcp',
+    'args': ['--autoConnect', '--channel=beta'],
+    'env': {}
+}
+
+with open('/Users/khs/.claude.json', 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+
+print('Done:', data['mcpServers']['chrome-devtools'])
+"
+```
+
+### Step 6: Claude Code 재시작
+
+`/exit` 후 재실행하거나 Claude Code를 완전히 종료 후 재시작합니다.
+
+---
+
+## 5. 함정 주의사항
+
+### 함정 1: 심볼릭 링크를 통한 원본 파일 오염
+
+**현상**: wrapper 스크립트를 만들었는데 node가 실행할 때 `SyntaxError` 발생
+
+**원인**: `os.unlink()` 없이 파일을 쓰면 심볼릭 링크를 따라가 `index.js` 원본을 덮어씁니다.
+
+```
+/usr/local/bin/chrome-devtools-mcp → ../lib/node_modules/.../index.js
+                                         ↑ 여기가 오염됨
+```
+
+**확인 방법**:
+```bash
+python3 -c "
+import os
+path = '/usr/local/bin/chrome-devtools-mcp'
+print('is symlink:', os.path.islink(path))
+if os.path.islink(path):
+    print('points to:', os.readlink(path))
+"
+```
+
+**복구 방법**: 패키지를 재설치하면 원본 `index.js`가 복원됩니다.
+```bash
+/Users/khs/.nvm/versions/node/v20.19.2/bin/npm install -g chrome-devtools-mcp
+```
+
+---
+
+### 함정 2: Python에서 `!` 이스케이프로 인한 shebang 손상
+
+**현상**: `#!/bin/bash` 대신 `#\!/bin/bash`로 저장되어 shebang 인식 실패
+
+**원인**: Python 문자열에서 `'\!'`는 `SyntaxWarning`을 발생시키며 `\!` 그대로 파일에 저장됩니다.
+
+```python
+# ❌ 잘못된 방법
+content = '#!/bin/bash\n...'   # 겉보기에 정상
+# → 파일에는 #\!/bin/bash 저장 (zsh history expansion 등의 영향)
+
+# ✅ 올바른 방법: 문자열 연결로 ! 회피
+content = '#' + '!/bin/bash\n' + 'exec ' + node_path + ' ...'
+```
+
+**확인 방법**: 파일의 첫 2바이트가 `#!`인지 확인합니다.
+```bash
+python3 -c "
+with open('/usr/local/bin/chrome-devtools-mcp', 'rb') as f:
+    print(f.read(2))
+# → b'#!'  (정상)
+# → b'#\\'  (손상 — 재생성 필요)
+"
+```
+
+---
+
+### 함정 3: npm install -g 시 global prefix 불일치
+
+**현상**: nvm node로 설치했는데 패키지가 `~/.nvm/...` 대신 `/usr/local/lib`에 설치됨
+
+**원인**: npm의 global prefix가 `/usr/local`로 설정되어 있을 수 있습니다.
+
+```bash
+# npm global prefix 확인
+/Users/khs/.nvm/versions/node/v20.19.2/bin/npm config get prefix
+# → /usr/local  (이 경우 /usr/local/lib에 설치됨)
+```
+
+어느 경로에 설치되든 실제 위치를 확인하는 방법:
+```bash
+/Users/khs/.nvm/versions/node/v20.19.2/bin/npm list -g 패키지명
+```
+
+---
+
+## 6. 다른 MCP 서버에 적용하기
+
+같은 문제가 발생하는 모든 npm 기반 MCP 서버에 동일한 패턴을 적용할 수 있습니다.
+
+### 범용 wrapper 생성 스크립트
+
+```bash
+python3 -c "
+import os, stat, json, subprocess
+
+PACKAGE_NAME = 'your-mcp-package'   # 패키지명 변경
+NODE_PATH = '/Users/khs/.nvm/versions/node/v20.19.2/bin/node'
+NPM_PATH = '/Users/khs/.nvm/versions/node/v20.19.2/bin/npm'
+
+# 1. 설치
+subprocess.run([NPM_PATH, 'install', '-g', PACKAGE_NAME])
+
+# 2. 패키지 경로 찾기 (npm list -g 결과에서 prefix 추출)
+result = subprocess.run([NPM_PATH, 'list', '-g', PACKAGE_NAME],
+                        capture_output=True, text=True)
+prefix = result.stdout.split('\n')[0].strip()
+pkg_path = f'{prefix}/node_modules/{PACKAGE_NAME}'
+
+# 3. bin 엔트리포인트 확인
+with open(f'{pkg_path}/package.json') as f:
+    pkg = json.load(f)
+bin_entry = pkg.get('bin')
+if isinstance(bin_entry, str):
+    entry_js = f'{pkg_path}/{bin_entry.lstrip(\"./\")}'
+else:
+    entry_js = f'{pkg_path}/{list(bin_entry.values())[0].lstrip(\"./\")}'
+
+# 4. wrapper 생성
+bin_path = f'/usr/local/bin/{PACKAGE_NAME}'
+if os.path.islink(bin_path):
+    os.unlink(bin_path)
+
+content = '#' + '!/bin/bash\nexec ' + NODE_PATH + ' ' + entry_js + ' \"\$@\"\n'
+with open(bin_path, 'w') as f:
+    f.write(content)
+os.chmod(bin_path, os.stat(bin_path).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+print(f'wrapper created: {bin_path}')
+print(f'entry: {entry_js}')
+"
+```
+
+### MCP 서버 타입별 정리
+
+| 서버 타입 | 설치 방식 | node 버전 문제 | 해결 방법 |
+|-----------|-----------|----------------|-----------|
+| npm 패키지 (`npx`) | 동적 다운로드 | ✅ 발생 | wrapper 스크립트 |
+| npm 전역 설치 | `npm install -g` | ✅ 발생 | wrapper 스크립트 |
+| Homebrew 설치 | `brew install` | ❌ 무관 | 직접 경로 사용 |
+| 네이티브 바이너리 | 직접 제공 | ❌ 무관 | 직접 경로 사용 |
+| HTTP 타입 (`type: "http"`) | 외부 서버 | ❌ 무관 | URL만 설정 |
+
+> **팁**: Homebrew로 설치 가능한 MCP 서버는 `brew install` 방식이 가장 안정적입니다.
+> node 버전 문제가 원천 차단됩니다.
+
+---
+
+## 7. macOS GUI 앱 환경에서 npx `spawn sh ENOENT` 문제
+
+### 증상
+
+다른 PC에서는 잘 동작하는 `.mcp.json` 설정이 특정 PC에서만 실패합니다.
+
+```
+chrome-devtools · ✘ failed
+
+Command: npx
+Args: -y chrome-devtools-mcp@latest
+```
+
+터미널에서 직접 실행하면 정상 동작합니다.
+
+### 핵심 오류
+
+```
+npm error code ENOENT
+npm error syscall spawn sh
+npm error path /Users/khs/ai_works/your-project
+npm error errno -2
+npm error enoent spawn sh ENOENT
+```
+
+`npx`가 내부적으로 `sh`를 spawn하는데, Claude Code MCP 실행 환경의 PATH에 `/bin`이 없어서 `sh`를 찾지 못합니다.
+
+### 진단 방법: 래퍼 스크립트로 실제 환경 캡처
+
+`.mcp.json`을 임시로 래퍼 스크립트로 변경하여 MCP 실행 시 실제 환경을 파악합니다.
+
+**Step 1: 래퍼 스크립트 생성**
+
+```bash
+cat > /tmp/mcp-wrapper.sh << 'EOF'
+#!/bin/sh
+# Claude Code가 MCP를 실행할 때의 실제 환경을 캡처
+echo "=== MCP 실행 환경 ===" > /tmp/mcp-env.txt
+echo "PATH=$PATH" >> /tmp/mcp-env.txt
+echo "HOME=$HOME" >> /tmp/mcp-env.txt
+echo "USER=$USER" >> /tmp/mcp-env.txt
+echo "SHELL=$SHELL" >> /tmp/mcp-env.txt
+echo "" >> /tmp/mcp-env.txt
+echo "=== which npx ===" >> /tmp/mcp-env.txt
+which npx >> /tmp/mcp-env.txt 2>&1
+echo "" >> /tmp/mcp-env.txt
+echo "=== npx 실행 시도 ===" >> /tmp/mcp-env.txt
+/usr/local/bin/npx -y chrome-devtools-mcp@latest "$@" 2>> /tmp/mcp-env.txt
+EOF
+chmod +x /tmp/mcp-wrapper.sh
+```
+
+**Step 2: `.mcp.json`을 래퍼 스크립트로 변경**
+
+```json
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "/bin/sh",
+      "args": ["/tmp/mcp-wrapper.sh"]
+    }
+  }
+}
+```
+
+**Step 3: Claude Code 재시작 후 로그 확인**
+
+```bash
+cat /tmp/mcp-env.txt
+```
+
+### 원인 분석
+
+로그 예시:
+
+```
+PATH=$PATH:/Users/khs/.nvm/versions/node/v18.18.1/bin:...:/usr/local/bin
+```
+
+`$PATH`가 **리터럴 문자열**로 들어가 있습니다. `/usr/bin:/bin` 등 기본 경로가 없습니다.
+
+**왜 이런 일이 발생하는가?**
+
+1. Claude Code는 MCP 실행 환경을 구성할 때 `.zshenv`를 **텍스트 파싱** 방식으로 읽어 `export KEY=VALUE` 패턴을 추출합니다.
+2. 이때 `export PATH="$PATH:..."` 패턴의 `$PATH`가 확장되지 않고 **리터럴**로 저장됩니다.
+3. 결과적으로 MCP 실행 환경의 PATH에 `/bin`이 없어서 `sh`를 찾지 못합니다.
+
+**왜 다른 PC에서는 동작하는가?**
+
+다른 PC의 `.zshenv`에 `export PATH="$PATH:..."` 패턴이 없었거나, Node.js가 `/usr/local/bin`에 직접 설치되어 있어서 문제가 발생하지 않았습니다.
+
+> **추가 원인**: nvm이 `~/.nvm/...` 경로에 설치되어 있고, Claude Code GUI 앱 환경의 PATH에 이 경로가 없을 수 있습니다. 심볼릭 링크(`/usr/local/bin/npx → ~/.nvm/.../npx`)로 해결을 시도해도, PATH에 `/bin`이 없으면 npm의 `spawn sh` 단계에서 실패합니다.
+
+### 해결 방법
+
+**`~/.claude/settings.json`의 `env`에 PATH 추가 (권장)**
+
+프로젝트 `.mcp.json`은 그대로 유지하고, Claude Code 전역 설정에서 올바른 PATH를 주입합니다.
+
+```json
+{
+  "env": {
+    "PATH": "/Users/khs/.nvm/versions/node/v24.9.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+  }
+}
+```
+
+- `.mcp.json`을 수정하지 않으므로 다른 PC와 동일한 설정 유지 가능
+- Claude Code가 실행하는 모든 MCP 서버에 적용됨
+- nvm default 버전 변경 시 이 값도 업데이트 필요
+
+**대안: nvm 심볼릭 링크 생성**
+
+```bash
+ln -sf ~/.nvm/versions/node/v24.9.0/bin/node /usr/local/bin/node
+ln -sf ~/.nvm/versions/node/v24.9.0/bin/npm /usr/local/bin/npm
+ln -sf ~/.nvm/versions/node/v24.9.0/bin/npx /usr/local/bin/npx
+```
+
+단, PATH에 `/bin`이 없으면 npm의 `spawn sh ENOENT`가 여전히 발생하므로 `settings.json` 방법과 함께 사용해야 합니다.
+
+### 디버깅 후 정리
+
+```bash
+# 래퍼 스크립트 및 로그 파일 삭제
+rm -f /tmp/mcp-wrapper.sh /tmp/mcp-env.txt
+
+# .mcp.json을 원래 설정으로 복원
+```
+
+---
+
+## 관련 문서
+
+- [Playwright MCP 가이드](./playwright-mcp-guide.md)
+- [Claude Code 메모리 시스템 가이드](./claude-code-memory-guide.md)

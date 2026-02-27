@@ -1,0 +1,273 @@
+# TaskFlow 튜토리얼 실행 가이드
+
+Claude Code를 활용하여 TaskFlow 프로젝트를 학습하는 두 가지 방법을 제공합니다.
+
+## 🎯 개요
+
+이 디렉토리는 [onboarding-tutorial.md](../onboarding-tutorial.md)에 정의된 **TaskFlow 프로젝트 튜토리얼**을 실행하는 도구와 가이드를 포함합니다.
+
+TaskFlow는 팀 태스크 관리 웹 애플리케이션으로, 다음 기술 스택을 사용합니다:
+- **백엔드**: Python 3.12, FastAPI, SQLAlchemy, PostgreSQL
+- **프론트엔드**: Next.js 15, TypeScript, Tailwind CSS
+- **인프라**: Docker, Docker Compose
+- **기능**: 인증, 프로젝트 관리, 칸반 보드, 대시보드
+
+## 📚 실행 방법
+
+### 🤖 방법 1: 자동 실행 (권장)
+
+**완전 자동화된 스크립트**로 전체 튜토리얼을 실행합니다.
+
+```bash
+./run-tutorial.sh [타겟_디렉토리]
+```
+
+**장점:**
+- ✅ 5개 Phase를 자동으로 순차 실행
+- ✅ 토큰 사용량 및 비용 자동 추적
+- ✅ 체크포인트 시스템으로 안전한 중단/재개
+- ✅ 자동 검증 및 상세 로깅
+- ✅ 약 4시간 소요 (무인 실행 가능)
+
+**상세 가이드:** [AUTOMATION-GUIDE.md](./AUTOMATION-GUIDE.md)
+
+---
+
+### ✋ 방법 2: 수동 실행
+
+**단계별로 직접 실행**하면서 각 과정을 학습합니다.
+
+```bash
+cd <프로젝트_디렉토리>
+claude
+# Phase별 프롬프트를 직접 입력
+```
+
+**장점:**
+- ✅ 각 단계를 이해하며 진행
+- ✅ 원하는 부분만 선택적으로 실행
+- ✅ 실시간 피드백과 상호작용
+- ✅ 커스터마이징 자유도 높음
+- ⏱️ 시간 조절 가능 (원하는 만큼)
+
+**상세 가이드:** [MANUAL-GUIDE.md](./MANUAL-GUIDE.md)
+
+---
+
+## 🚀 빠른 시작
+
+### 사전 요구사항
+
+1. **Claude Code** (필수)
+   ```bash
+   npm install -g @anthropic-ai/claude-code
+   claude login
+   ```
+
+2. **Git** (필수)
+   ```bash
+   git --version
+   ```
+
+3. **jq** & **bc** (자동 실행 시 권장)
+   ```bash
+   # macOS
+   brew install jq bc
+
+   # Linux
+   sudo apt-get install jq bc
+   ```
+
+### 자동 실행 시작하기
+
+```bash
+# 1. 기본 실행 (현재 디렉토리에 taskflow 생성)
+./run-tutorial.sh
+
+# 2. 상위 디렉토리에 생성 (권장)
+./run-tutorial.sh ../taskflow-tutorial
+
+# 3. 특정 Phase만 실행
+./run-tutorial.sh ../taskflow-tutorial --start-phase 2 --end-phase 3
+
+# 4. 실시간 모니터링
+tail -f ../taskflow-tutorial/logs/tutorial-*.log
+```
+
+### 수동 실행 시작하기
+
+```bash
+# 1. 프로젝트 디렉토리 생성
+mkdir taskflow && cd taskflow
+
+# 2. Claude Code 시작
+claude
+
+# 3. Phase 1 프롬프트 입력
+# (MANUAL-GUIDE.md 참조)
+```
+
+---
+
+## 📂 디렉토리 구조
+
+```
+tutorial-automation/
+├── README.md                    # 이 파일 (전체 개요)
+├── AUTOMATION-GUIDE.md          # 🤖 자동 실행 상세 가이드
+├── MANUAL-GUIDE.md              # ✋ 수동 실행 상세 가이드
+│
+├── run-tutorial.sh              # 자동 실행 스크립트
+├── generate-run-script.sh       # run.sh 생성 스크립트 (수동 실행용)
+│
+├── phases/                      # Phase별 프롬프트 파일
+│   ├── 01-setup.md
+│   ├── 02-backend.md
+│   ├── 03-frontend.md
+│   ├── 04-multi-agent.md
+│   └── 05-devops.md
+│
+└── validators/                  # Phase별 검증 스크립트
+    ├── validate-phase1.sh
+    ├── validate-phase2.sh
+    ├── validate-phase3.sh
+    ├── validate-phase4.sh
+    └── validate-phase5.sh
+```
+
+---
+
+## 🔍 검증 스크립트 (Validators)
+
+### 개요
+
+각 Phase 완료 후 프로젝트 구조와 코드가 올바르게 생성되었는지 확인하는 Bash 스크립트입니다.
+
+### 사용 방법별 활용
+
+| 실행 방법 | 검증 스크립트 사용 | 설명 |
+|----------|-------------------|------|
+| **자동 실행** | ✅ **필수** (기본값) | 각 Phase 후 자동 실행하여 품질 보증 |
+| **수동 실행** | ⚠️ **선택적** (권장) | 직접 실행하여 자가 진단 |
+| **순수 수동** (onboarding-tutorial.md) | ❌ 사용 안 함 | 검증 스크립트 없이 Claude에게 직접 확인 |
+
+### 주요 기능
+
+1. **구조 검증**: 필수 디렉토리와 파일 존재 확인
+2. **내용 검증**: YAML frontmatter, 설정 파일 형식 확인
+3. **패턴 검증**: 키워드 검색으로 주요 기능 구현 확인
+4. **기능 검증**: `--functional` 플래그로 실제 빌드/실행 테스트 (Phase 5)
+
+### 사용 예시
+
+```bash
+# Phase 1 완료 후 검증
+bash validators/validate-phase1.sh .
+
+# Phase 5 구조 검증
+bash validators/validate-phase5.sh .
+
+# Phase 5 기능 검증 (Docker 빌드 테스트 포함, 1-5분 소요)
+bash validators/validate-phase5.sh . --functional
+```
+
+### AI 비결정성 대응
+
+Claude를 포함한 AI는 같은 프롬프트에도 매번 다른 코드를 생성할 수 있습니다.
+검증 스크립트는 이러한 다양성을 고려하여 설계되었습니다:
+
+- ✅ **다중 경로 지원**: `backend/Dockerfile` 또는 `docker/backend.Dockerfile`
+- ✅ **패턴 검색**: 특정 파일명이 아닌 키워드로 기능 확인
+- ✅ **유연한 구조**: 여러 구현 패턴 허용
+- ⚠️ **제한사항**: 예측하지 못한 새로운 패턴은 검증 실패 가능
+
+### 주의사항
+
+**검증 실패 시 대응**:
+1. **거짓 실패 가능성**: AI가 다른 방식으로 구현했을 수 있음
+2. **실제 동작 확인**: 프로젝트가 실제로 동작하는지 테스트
+3. **선택적 무시**: 기능이 정상이면 검증 실패를 무시해도 됨
+4. **--skip-validation**: 자동 실행 시 검증 건너뛰기 가능
+
+```bash
+# 검증 건너뛰기
+./run-tutorial.sh --skip-validation
+```
+
+---
+
+## 🎓 튜토리얼 Phase
+
+전체 튜토리얼은 5개 Phase로 구성됩니다:
+
+| Phase | 내용 | 예상 시간 | 주요 학습 내용 |
+|-------|------|-----------|----------------|
+| **1. 프로젝트 구성** | CLAUDE.md, 디렉토리 구조, 서브에이전트 | 30분 | 프로젝트 초기 설정, 에이전트 정의 |
+| **2. 백엔드 구현** | FastAPI, SQLAlchemy, JWT 인증, API | 60분 | 백엔드 아키텍처, 테스트 작성 |
+| **3. 프론트엔드 구현** | Next.js, 인증 UI, 칸반 보드 | 60분 | React 컴포넌트, App Router |
+| **4. 멀티 에이전트 협업** | 서브에이전트 활용, 코드 리뷰 | 60분 | 에이전트 협업, 코드 리뷰 |
+| **5. DevOps & QA** | Docker, CI/CD, 통합 테스트 | 30분 | 배포 파이프라인, 최적화 |
+
+**총 예상 시간**: 약 4시간
+
+---
+
+## 💡 어떤 방법을 선택해야 할까?
+
+### 🤖 자동 실행을 선택하세요:
+- 빠르게 완성된 프로젝트를 확인하고 싶을 때
+- 에이전틱 코딩의 전체 흐름을 경험하고 싶을 때
+- 여러 프로젝트를 빠르게 생성해야 할 때
+- 무인 실행이 필요할 때
+
+### ✋ 수동 실행을 선택하세요:
+- 각 단계를 깊이 이해하며 학습하고 싶을 때
+- 특정 부분만 집중적으로 연습하고 싶을 때
+- 프롬프트 작성 기술을 향상시키고 싶을 때
+- 자신만의 방식으로 커스터마이징하고 싶을 때
+
+> 💡 **추천**: 처음에는 **자동 실행**으로 전체 흐름을 파악하고, 그 다음 **수동 실행**으로 세부 내용을 학습하세요!
+
+---
+
+## 📊 비용 예상 (Sonnet 4.5 기준)
+
+- **전체 튜토리얼**: $2-4 USD
+- **Phase별**: $0.2-1.0 USD
+- **토큰 사용량**: 자동 추적 및 로그에 기록
+
+---
+
+## 🆘 도움말
+
+### 자동 실행 관련
+```bash
+./run-tutorial.sh --help
+```
+또는 [AUTOMATION-GUIDE.md](./AUTOMATION-GUIDE.md) 참조
+
+### 수동 실행 관련
+[MANUAL-GUIDE.md](./MANUAL-GUIDE.md) 참조
+
+### 일반적인 문제
+- [AUTOMATION-GUIDE.md - 트러블슈팅](./AUTOMATION-GUIDE.md#트러블슈팅)
+- [AUTOMATION-GUIDE.md - FAQ](./AUTOMATION-GUIDE.md#faq)
+
+---
+
+## 🔗 관련 문서
+
+- [onboarding-tutorial.md](../onboarding-tutorial.md) - 원본 튜토리얼
+- [onboarding-handbook.md](../onboarding-handbook.md) - 에이전틱 코딩 가이드
+- [claude-code-usage-modes.md](../claude-code-usage-modes.md) - Claude Code 사용 방법
+- [Claude Code 공식 문서](https://code.claude.com/docs)
+
+---
+
+## 📝 라이선스
+
+이 도구는 TaskFlow 튜토리얼의 일부이며, 교육 목적으로 자유롭게 사용할 수 있습니다.
+
+---
+
+**Happy Coding with Claude! 🚀**

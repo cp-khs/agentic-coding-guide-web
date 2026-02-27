@@ -1,0 +1,59 @@
+# Phase 3: 프론트엔드 구현 (60분)
+
+## 4.1 Next.js 프로젝트 설정
+
+frontend/ 디렉토리에 Next.js 15 프로젝트를 셋업해줘.
+
+- App Router 사용
+- TypeScript
+- Tailwind CSS
+- API 클라이언트: fetch 기반 래퍼 (lib/api.ts)
+  - JWT 토큰 자동 첨부
+  - 에러 핸들링
+  - 타입 안전성
+- 백엔드 API의 응답 타입 정의 (types/api.ts)
+
+---
+
+## 4.2 인증 UI
+
+인증 관련 페이지를 만들어줘.
+
+- /login - 로그인 페이지
+- /register - 회원가입 페이지
+- AuthContext로 로그인 상태 관리
+- 미인증 사용자는 /login으로 리다이렉트
+- 깔끔한 디자인 (Tailwind CSS)
+
+---
+
+## 4.3 칸반 보드 UI
+
+칸반 보드를 구현해줘.
+
+페이지:
+- /projects - 프로젝트 목록
+- /projects/[id] - 칸반 보드 (핵심 페이지)
+
+컴포넌트:
+- KanbanBoard - 보드 전체 레이아웃
+- KanbanColumn - 상태별 컬럼 (Todo, In Progress, Done)
+- TaskCard - 태스크 카드 (제목, 우선순위 뱃지, 담당자 아바타)
+- TaskDetailModal - 태스크 상세 보기/수정 모달
+- CreateTaskForm - 새 태스크 생성 폼
+- CommentSection - 댓글 목록 및 작성
+
+드래그 앤 드롭은 HTML5 Drag and Drop API나
+간단한 구현으로 해줘 (외부 라이브러리 최소화).
+
+---
+
+## 4.4 대시보드
+
+/dashboard 페이지를 만들어줘.
+
+- 내 프로젝트별 태스크 현황 요약
+  - 상태별 태스크 수 (Todo/In Progress/Done)
+  - 내게 배정된 태스크 목록
+- 간단한 차트나 진행 바로 시각화
+- 프로젝트로 바로 이동할 수 있는 링크

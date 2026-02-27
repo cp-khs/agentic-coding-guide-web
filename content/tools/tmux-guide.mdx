@@ -1,0 +1,406 @@
+# tmux 사용법 가이드
+
+> tmux의 설치, 기본 개념, 설정, 영속성 관리까지 다루는 종합 가이드
+
+---
+
+## 목차
+
+1. [tmux란?](#1-tmux란)
+2. [설치](#2-설치)
+3. [기본 개념](#3-기본-개념)
+4. [핵심 명령어 요약](#4-핵심-명령어-요약)
+5. [세션 영속성](#5-세션-영속성)
+6. [~/.tmux.conf 설정](#6-tmuxconf-설정)
+7. [iTerm2 통합 모드 (tmux -CC)](#7-iterm2-통합-모드-tmux--cc)
+8. [트러블슈팅](#8-트러블슈팅)
+
+---
+
+## 1. tmux란?
+
+tmux는 **터미널 멀티플렉서(Terminal Multiplexer)**입니다. 하나의 터미널에서 여러 세션·윈도우·패널을 동시에 관리하고, 터미널을 닫아도 세션을 유지할 수 있습니다.
+
+### 서버-클라이언트 구조
+
+tmux는 서버 프로세스와 클라이언트(터미널)가 분리된 구조로 동작합니다:
+
+```
+[tmux 서버 프로세스]  ← 백그라운드에서 독립 실행
+       ↑
+[터미널/iTerm2]  ← attach/detach만 하는 뷰어
+```
+
+터미널은 단순한 "뷰어"에 불과하므로, 터미널을 닫아도 tmux 서버와 세션은 계속 살아있습니다.
+
+---
+
+## 2. 설치
+
+```bash
+# macOS (Homebrew)
+brew install tmux
+
+# Ubuntu/Debian
+sudo apt install tmux
+
+# CentOS/RHEL
+sudo yum install tmux
+
+# Arch Linux
+sudo pacman -S tmux
+```
+
+설치 확인:
+
+```bash
+tmux -V
+# 출력 예: tmux 3.4
+```
+
+---
+
+## 3. 기본 개념
+
+tmux는 3가지 계층 구조로 동작합니다:
+
+```
+┌─────────────────────────────────────────┐
+│  서버 (Server)                           │
+│  ├── 세션 (Session) : "project-a"        │
+│  │   ├── 윈도우 (Window) : "coding"      │
+│  │   │   ├── 패널 (Pane) : vim           │
+│  │   │   └── 패널 (Pane) : 터미널        │
+│  │   └── 윈도우 (Window) : "testing"     │
+│  │       └── 패널 (Pane) : npm test      │
+│  └── 세션 (Session) : "project-b"        │
+│      └── ...                             │
+└─────────────────────────────────────────┘
+```
+
+- **세션(Session)**: 프로젝트 단위. 여러 윈도우를 포함
+- **윈도우(Window)**: 탭처럼 동작. 한 세션 안에서 전환 가능
+- **패널(Pane)**: 하나의 윈도우를 분할한 영역. 동시에 보임
+
+---
+
+## 4. 핵심 명령어 요약
+
+tmux의 모든 단축키는 **Prefix 키** 입력 후 사용합니다.
+기본 Prefix 키는 `Ctrl + b` 입니다.
+
+### 세션 관리
+
+| 명령어 | 설명 |
+|--------|------|
+| `tmux new -s 이름` | 새 세션 생성 |
+| `tmux ls` | 세션 목록 보기 |
+| `tmux attach -t 이름` | 세션에 다시 연결 |
+| `tmux kill-session -t 이름` | 세션 종료 |
+| `Prefix + d` | 세션에서 분리 (detach) |
+| `Prefix + s` | 세션 목록 표시 및 전환 |
+
+### 윈도우 관리
+
+| 단축키 | 설명 |
+|--------|------|
+| `Prefix + c` | 새 윈도우 생성 |
+| `Prefix + n` | 다음 윈도우 |
+| `Prefix + p` | 이전 윈도우 |
+| `Prefix + 0~9` | 번호로 윈도우 이동 |
+| `Prefix + ,` | 윈도우 이름 변경 |
+| `Prefix + w` | 윈도우 목록 표시 및 선택 |
+
+### 패널 관리
+
+| 단축키 | 설명 |
+|--------|------|
+| `Prefix + %` | 세로 분할 (좌우) |
+| `Prefix + "` | 가로 분할 (상하) |
+| `Prefix + 방향키` | 패널 간 이동 |
+| `Prefix + z` | 패널 최대화/원복 (줌 토글) |
+| `Prefix + x` | 현재 패널 닫기 |
+| `Prefix + Space` | 패널 레이아웃 순환 변경 |
+| `Prefix + Ctrl+방향키` | 패널 크기 조절 |
+| `Prefix + [` | 복사 모드 진입 (`q`로 빠져나감) |
+
+---
+
+## 5. 세션 영속성
+
+### 영속성 레벨
+
+| 상황 | 세션 유지 여부 |
+|------|--------------|
+| 터미널 창 닫기 | ✅ 유지 |
+| SSH 연결 끊김 | ✅ 유지 |
+| iTerm2 완전 종료 | ✅ 유지 (tmux 서버 프로세스 독립 실행) |
+| **컴퓨터 재시작/종료** | ❌ 소멸 |
+
+터미널을 닫아도 세션이 유지되는 이유는 tmux가 서버-클라이언트 구조로 동작하기 때문입니다. 터미널은 뷰어일 뿐이고, 실제 세션은 tmux 서버 프로세스가 독립적으로 관리합니다.
+
+### 컴퓨터 재시작 후에도 복원하기
+
+**tmux-resurrect** + **tmux-continuum** 플러그인 조합이 표준 해결책입니다.
+
+```bash
+# TPM (Tmux Plugin Manager) 설치
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
+# ~/.tmux.conf에 추가
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+
+# 자동 저장/복원 활성화
+set -g @continuum-restore 'on'
+
+# 플러그인 설치: tmux 내에서 Prefix + I
+```
+
+| 플러그인 | 역할 |
+|---------|------|
+| `tmux-resurrect` | 세션 상태를 파일로 수동 저장/복원 (`Prefix+Ctrl+s` / `Prefix+Ctrl+r`) |
+| `tmux-continuum` | 15분마다 자동 저장, 재시작 후 자동 복원 |
+
+---
+
+## 6. ~/.tmux.conf 설정
+
+### 읽히는 시점
+
+`~/.tmux.conf`는 **tmux 서버가 최초 시작될 때 한 번만** 읽힙니다.
+
+```
+tmux 서버 최초 시작 시 → config 읽음
+tmux 서버가 이미 실행 중 → 새 세션/attach 해도 config 다시 읽지 않음
+```
+
+### 수정 후 즉시 적용
+
+```bash
+# 방법 1: tmux 내에서 수동 재로드
+tmux source-file ~/.tmux.conf
+
+# 방법 2: Prefix + : 입력 후
+source-file ~/.tmux.conf
+```
+
+단축키로 등록해두면 편합니다:
+
+```bash
+# ~/.tmux.conf에 추가
+bind r source-file ~/.tmux.conf \; display "Config reloaded!"
+# → 이후 Prefix + r 로 언제든 재로드
+```
+
+### 완전 초기화가 필요한 경우
+
+플러그인 등 일부 설정은 서버 재시작이 필요합니다:
+
+```bash
+tmux kill-server     # 모든 세션 종료 후 서버 재시작
+tmux new -s dev      # 이때 config 새로 읽음
+```
+
+> **주의**: `kill-server`는 모든 세션이 종료됩니다. tmux-resurrect로 저장해두지 않았다면 작업이 사라집니다.
+
+### 추천 설정
+
+```bash
+# ~/.tmux.conf
+
+# ─── 기본 설정 ─────────────────────────────────────
+
+# Prefix 키를 Ctrl+a로 변경 (더 누르기 편함)
+unbind C-b
+set -g prefix C-a
+bind C-a send-prefix
+
+# 마우스 지원 활성화 (패널 크기 조절, 스크롤 등)
+set -g mouse on
+
+# 히스토리 버퍼 크기 증가
+set -g history-limit 50000
+
+# 256색 지원
+set -g default-terminal "screen-256color"
+set -ga terminal-overrides ",xterm-256color:Tc"
+
+# ─── 패널 분할 단축키 개선 ──────────────────────────
+
+# | 로 세로 분할, - 로 가로 분할 (직관적)
+bind | split-window -h -c "#{pane_current_path}"
+bind - split-window -v -c "#{pane_current_path}"
+unbind '"'
+unbind %
+
+# 새 윈도우를 현재 경로에서 열기
+bind c new-window -c "#{pane_current_path}"
+
+# ─── 패널 이동 단축키 ──────────────────────────────
+
+# Alt + 방향키로 패널 이동 (Prefix 없이!)
+bind -n M-Left select-pane -L
+bind -n M-Right select-pane -R
+bind -n M-Up select-pane -U
+bind -n M-Down select-pane -D
+
+# ─── 패널 크기 조절 ────────────────────────────────
+
+# Prefix + H/J/K/L 로 패널 크기 조절
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+
+# ─── 상태바 설정 ───────────────────────────────────
+
+# 상태바를 상단에 표시
+set -g status-position top
+
+# 세션명 표시
+set -g status-left '[#S] '
+set -g status-left-length 20
+
+# 현재 시간 표시
+set -g status-right '%Y-%m-%d %H:%M'
+
+# ─── 복사 모드 (vi 스타일) ─────────────────────────
+
+setw -g mode-keys vi
+bind -T copy-mode-vi v send -X begin-selection
+
+# macOS: pbcopy 사용
+bind -T copy-mode-vi y send -X copy-pipe-and-cancel "pbcopy"
+
+# ─── 기타 편의 설정 ────────────────────────────────
+
+# 윈도우/패널 번호를 1부터 시작
+set -g base-index 1
+setw -g pane-base-index 1
+
+# 윈도우 닫힐 때 번호 재정렬
+set -g renumber-windows on
+
+# ESC 딜레이 제거 (vim 사용 시 필수)
+set -sg escape-time 0
+
+# 포커스 이벤트 전달
+set -g focus-events on
+
+# config 재로드 단축키
+bind r source-file ~/.tmux.conf \; display "Config reloaded!"
+```
+
+설정 적용:
+
+```bash
+tmux source-file ~/.tmux.conf
+```
+
+---
+
+## 7. iTerm2 통합 모드 (tmux -CC)
+
+macOS iTerm2에서는 `tmux -CC`로 **네이티브 통합 모드**를 사용할 수 있습니다. 이 모드에서 tmux 세션의 윈도우/패널이 iTerm2의 네이티브 탭/분할 패널로 표시됩니다.
+
+### 기본 사용법
+
+```bash
+# 새 세션 생성 (iTerm2 네이티브 탭으로 열림)
+tmux -CC new -s dev
+
+# 기존 세션 재연결
+tmux -CC attach -t dev
+```
+
+### 탭으로 열리도록 설정
+
+기본적으로 새 창(윈도우)이 새 macOS 윈도우로 열립니다. 탭으로 열리게 하려면:
+
+```
+iTerm2 → Settings (⌘,) → General → tmux 탭
+"Open tmux windows as:" → "Tabs in the attaching window" 선택
+```
+
+| 옵션 | 동작 |
+|------|------|
+| `Native windows` | 새 macOS 윈도우로 열림 |
+| `Tabs in the attaching window` | **현재 iTerm2 창의 탭으로 열림** ← 권장 |
+| `Tabs in new window` | 새 iTerm2 창의 탭으로 열림 |
+
+### 자주 묻는 문제
+
+**Q: 새 탭에서 `tmux -CC attach`를 실행하면 "already attached" 에러가 납니다**
+
+새 탭에서 굳이 재연결할 필요가 없습니다. `Cmd + T`로 새 탭을 열면 같은 tmux 세션의 `$TMUX` 환경변수가 상속되어 있으므로, 어떤 명령이든 바로 실행하면 됩니다.
+
+```bash
+# ❌ 불필요 — 이미 세션 안에 있어서 에러 발생
+tmux -CC attach -t dev
+
+# ✅ 새 탭에서 그냥 바로 실행
+echo $TMUX  # 값이 있으면 이미 세션 안
+```
+
+**Q: 탭을 다른 윈도우로 옮기고 싶습니다**
+
+- **드래그**: 탭바에서 다른 윈도우의 탭바로 드래그
+- **메뉴**: `Window → Move Tab to New Window`
+
+### 세션 분리 및 재연결
+
+```bash
+# 분리
+tmux detach   # 또는 탭 0(tmux 제어 탭) 닫기
+
+# 재연결
+tmux -CC attach -t dev
+# → 모든 탭/패널이 그대로 복원됨
+```
+
+### 장단점
+
+**장점:**
+- tmux 세션 영속성 + iTerm2 네이티브 UI
+- `Cmd + D`(분할), `Cmd + 1~9`(탭 이동) 등 iTerm2 단축키 그대로 사용
+- 마우스 스크롤, 클릭, 텍스트 선택이 자연스럽게 동작
+
+**단점:**
+- tmux 제어 탭 1개가 추가로 필요
+- iTerm2에서만 사용 가능
+
+---
+
+## 8. 트러블슈팅
+
+### Q: tmux 안에서 색상이 이상해요
+
+```bash
+# ~/.tmux.conf에 추가
+set -g default-terminal "screen-256color"
+set -ga terminal-overrides ",xterm-256color:Tc"
+```
+
+### Q: 마우스 스크롤이 안 돼요
+
+```bash
+# ~/.tmux.conf에 추가
+set -g mouse on
+```
+
+마우스 모드 활성화 시 스크롤하면 복사 모드(copy mode)로 진입합니다. `q`로 빠져나올 수 있습니다.
+
+### Q: 출력이 잘려요 (스크롤백 부족)
+
+```bash
+set -g history-limit 50000
+```
+
+### Q: tmux 안에서 복사/붙여넣기가 안 돼요 (macOS)
+
+```bash
+# tmux 3.2+
+set -g set-clipboard on
+```

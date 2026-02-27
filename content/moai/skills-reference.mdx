@@ -1,0 +1,225 @@
+# MoAI Skills 참조 가이드
+
+> **목적**: Claude Code에서 사용 가능한 MoAI 스킬 전체 목록과 사용 시점 가이드
+> **사용법**: `/skill-name` 또는 `Skill("skill-name")` 도구로 호출
+> **개념 이해** (아키텍처·워크플로우·에이전트·LLM 교체·타 프레임워크 비교): [moai-adk-guide.md](./moai-adk-guide.md)
+
+---
+
+## 스킬이란?
+
+MoAI 스킬(Skill)은 `.claude/skills/` 디렉토리에 저장된 마크다운 파일로,
+호출 시 해당 도메인의 전문 지식과 패턴이 Claude의 컨텍스트에 **주입**됩니다.
+
+```
+# 호출 방법
+/moai plan           → moai 스킬이 로드되어 Intent Router 활성화
+/explain-code        → explain-code 스킬이 로드되어 시각적 코드 설명 모드 활성화
+
+# Skill 도구로 직접 호출
+Skill("moai-lang-python")     → Python 전문가 컨텍스트 주입
+Skill("moai-domain-backend")  → 백엔드 아키텍처 전문가 컨텍스트 주입
+```
+
+---
+
+## 카테고리별 스킬 목록
+
+### 1. 코어 오케스트레이터
+
+핵심 MoAI 시스템을 구성하는 스킬들입니다.
+
+| 스킬 | 사용 시점 |
+|------|-----------|
+| **moai** | 모든 개발 작업의 진입점. plan/run/sync/fix/loop/project/feedback 서브커맨드 라우팅 |
+| **moai-foundation-core** | TRUST 5 품질 프레임워크, SPEC-First DDD 방법론, 에이전트 위임 패턴 참조 시 |
+| **moai-foundation-context** | 토큰 예산 관리, 컨텍스트 창 한계, 세션 핸드오프, /clear 전략 수립 시 |
+| **moai-foundation-quality** | 코드 리뷰, 품질 게이트 검증, lint 설정, TRUST 5 컴플라이언스 시 |
+| **moai-foundation-thinking** | 아이디어 생성, 제안 평가, 가정 검토, 솔루션 탐색 등 창의적 문제 해결 시 |
+| **moai-foundation-philosopher** | 아키텍처 결정, 기술 선택 트레이드오프, 근본 원인 분석, 인지 편향 탐지 시 |
+| **moai-foundation-claude** | Claude Code 확장(스킬, 에이전트, 플러그인, 훅, 메모리) 생성·설정 시 |
+
+---
+
+### 2. 워크플로우
+
+개발 방법론과 자동화 파이프라인 스킬들입니다.
+
+| 스킬 | 사용 시점 |
+|------|-----------|
+| **moai-workflow-spec** | SPEC 문서 작성, EARS 형식 요구사항, 인수 기준, Plan-Run-Sync 통합 시 |
+| **moai-workflow-ddd** | 레거시 코드 리팩토링, ANALYZE-PRESERVE-IMPROVE 사이클, 동작 보존 변환 시 |
+| **moai-workflow-tdd** | 신규 기능 개발, RED-GREEN-REFACTOR 사이클, 테스트 우선 개발 시 |
+| **moai-workflow-testing** | 테스트 작성, 커버리지 측정, 특성 테스트, TDD, CI/CD 품질 보증 시 |
+| **moai-workflow-loop** | Ralph Engine - LSP 진단 + AST-grep 통합 자동 피드백 루프, 연속 품질 개선 시 |
+| **moai-workflow-worktree** | 병렬 SPEC 개발 환경, 격리된 워크스페이스, git worktree 관리 시 |
+| **moai-workflow-thinking** | Sequential Thinking MCP, UltraThink 모드, 깊은 분석·복잡한 문제 분해 시 |
+| **moai-workflow-jit-docs** | JIT 문서 로딩, 관련 문서 자동 발견·캐싱, 새 기술 작업 시 |
+| **moai-workflow-templates** | 코드 보일러플레이트, 스캐폴딩, 프로젝트 템플릿 관리 시 |
+| **moai-workflow-project** | 프로젝트 설정, 문서화, 다국어 초기화, 템플릿 최적화 시 |
+
+---
+
+### 3. 언어별 전문가
+
+특정 프로그래밍 언어에 특화된 스킬들입니다.
+
+| 스킬 | 커버 범위 |
+|------|-----------|
+| **moai-lang-python** | Python 3.13+, FastAPI, Django, async, pytest, 데이터 파이프라인 |
+| **moai-lang-typescript** | TypeScript 5.9+, React 19, Next.js 16 App Router, tRPC, Zod |
+| **moai-lang-javascript** | ES2024+, Node.js 22 LTS, Bun 1.x, Deno 2.x, Vitest, ESLint 9, Biome |
+| **moai-lang-go** | Go 1.23+, Fiber, Gin, GORM, 고성능 마이크로서비스, CLI |
+| **moai-lang-rust** | Rust 1.92+, Axum, Tokio, SQLx, 메모리 안전 시스템, WebAssembly |
+| **moai-lang-java** | Java 21 LTS, Spring Boot 3.3, 가상 스레드, 패턴 매칭, 엔터프라이즈 |
+| **moai-lang-kotlin** | Kotlin 2.0+, Ktor, 코루틴, Compose Multiplatform |
+| **moai-lang-csharp** | C# 12 / .NET 8, ASP.NET Core, Entity Framework, Blazor |
+| **moai-lang-ruby** | Ruby 3.3+, Rails 7.2, ActiveRecord, Hotwire/Turbo |
+| **moai-lang-php** | PHP 8.3+, Laravel 11, Symfony 7, Eloquent ORM |
+| **moai-lang-scala** | Scala 3.4+, Akka, Cats Effect, ZIO, Spark, 분산 시스템 |
+| **moai-lang-swift** | Swift 6+, SwiftUI, Combine, Swift Concurrency, iOS/macOS |
+| **moai-lang-flutter** | Flutter 3.24+, Dart 3.5+, Riverpod, go_router, 크로스플랫폼 |
+| **moai-lang-cpp** | C++23/C++20, RAII, 스마트 포인터, concepts, ranges, CMake |
+| **moai-lang-r** | R 4.4+, tidyverse, ggplot2, Shiny, 데이터 분석 파이프라인 |
+| **moai-lang-elixir** | Elixir 1.17+, Phoenix 1.7, LiveView, Ecto, OTP 패턴 |
+
+---
+
+### 4. 도메인 전문가
+
+특정 기술 도메인에 특화된 스킬들입니다.
+
+| 스킬 | 사용 시점 |
+|------|-----------|
+| **moai-domain-backend** | API 설계, REST/GraphQL, 서버 구현, 인증/인가, 미들웨어, 백엔드 아키텍처 |
+| **moai-domain-frontend** | React 19, Next.js 16, Vue 3.5, 컴포넌트 아키텍처, 상태 관리, 성능 최적화 |
+| **moai-domain-database** | PostgreSQL, MongoDB, Redis, Oracle, 스키마 설계, 쿼리 최적화, 인덱싱 |
+| **moai-domain-uiux** | 디자인 시스템, WCAG 접근성, ARIA, 다크 모드 테마, 디자인 토큰 |
+
+---
+
+### 5. 라이브러리 & 프레임워크
+
+특정 라이브러리 통합에 특화된 스킬들입니다.
+
+| 스킬 | 사용 시점 |
+|------|-----------|
+| **moai-library-shadcn** | shadcn/ui 컴포넌트, Radix primitives, Tailwind 기반 컴포넌트 라이브러리 (React 전용) |
+| **moai-library-mermaid** | Mermaid 다이어그램, 아키텍처 다이어그램, 플로우차트, 시퀀스 다이어그램 |
+| **moai-library-nextra** | Nextra 문서 프레임워크, Next.js 기반 문서 사이트, 지식 베이스 |
+| **moai-framework-electron** | Electron 33+, Main/Renderer 프로세스, IPC, 자동 업데이트, 데스크톱 앱 패키징 |
+
+---
+
+### 6. 플랫폼
+
+특정 클라우드/플랫폼 서비스에 특화된 스킬들입니다.
+
+| 스킬 | 사용 시점 |
+|------|-----------|
+| **moai-platform-database-cloud** | Neon(서버리스 PostgreSQL), Supabase(실시간), Firebase Firestore(NoSQL) |
+| **moai-platform-auth** | Auth0, Clerk, Firebase Auth, MFA, SSO, passkeys, WebAuthn, OAuth |
+| **moai-platform-chrome-extension** | Chrome Extension MV3, 서비스 워커, content script, chrome.* API, 웹 스토어 배포 |
+| **moai-platform-deployment** | Vercel, Railway, Convex, 엣지 함수, 서버리스 인프라, 컨테이너 배포 |
+
+---
+
+### 7. 도구
+
+특화된 기술 도구 스킬들입니다.
+
+| 스킬 | 사용 시점 |
+|------|-----------|
+| **moai-tool-svg** | SVG 생성·최적화, SVGO, 아이콘 시스템, 데이터 시각화, SVG 애니메이션 |
+| **moai-tool-ast-grep** | AST 기반 구조적 코드 검색, 보안 스캔, 리팩토링, codemod, 40+ 언어 지원 |
+| **moai-formats-data** | TOON 인코딩, JSON/YAML 최적화, 직렬화 패턴, 데이터 검증 |
+| **moai-docs-generation** | Sphinx, MkDocs, TypeDoc, Nextra로 코드에서 문서 생성, 문서 사이트 빌드 |
+| **moai-design-tools** | Figma MCP, Pencil 렌더러, Pencil-to-code 내보내기, 디자인-코드 워크플로우 |
+
+---
+
+### 8. 팀 관리 (슬래시 커맨드)
+
+Claude Code Agent Teams 관리 커맨드입니다.
+
+> **사전 요건**: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` 환경 변수 설정 필요
+
+| 커맨드 | 별칭 | 사용 시점 |
+|--------|------|-----------|
+| `/create-team [팀이름]` | `team-create` | 새 팀 생성 + 팀원 spawn. 팀이름 미지정 시 `dev-team` 기본값 |
+| `/restart-team` | `team-restart` | 기존 팀을 종료하고 재시작 |
+| `/team-add-member` | - | 실행 중인 팀에 새 팀원 추가 |
+
+---
+
+### 9. 유틸리티
+
+일반 목적 유틸리티 스킬들입니다.
+
+| 스킬 | 사용 시점 |
+|------|-----------|
+| **explain-code** | 코드 동작 설명, 시각적 다이어그램과 유추를 통한 코드 교육 |
+| **keybindings-help** | 키보드 단축키 커스터마이징, `~/.claude/keybindings.json` 수정 |
+
+---
+
+## 스킬 선택 가이드
+
+```
+작업 유형에 따른 스킬 선택:
+
+새 기능 기획         → moai plan  (또는 moai-workflow-spec)
+코드 구현            → moai run   (또는 moai-workflow-ddd / moai-workflow-tdd)
+버그 수정            → moai fix
+반복 오류 수정       → moai loop  (또는 moai-workflow-loop)
+문서 업데이트        → moai sync  (또는 moai-docs-generation)
+
+언어별 심화 작업:
+  Python FastAPI     → moai-lang-python
+  React/Next.js      → moai-lang-typescript + moai-domain-frontend
+  PostgreSQL 최적화  → moai-domain-database
+
+아키텍처 결정        → moai-foundation-philosopher
+복잡한 문제 분석     → moai-workflow-thinking (--ultrathink 플래그)
+코드 품질 검증       → moai-foundation-quality
+
+팀 협업 시작         → /create-team [팀이름]
+```
+
+---
+
+## /moai 서브커맨드 요약
+
+| 서브커맨드 | 별칭 | 목적 |
+|-----------|------|------|
+| `/moai plan` | spec | SPEC 문서 작성 (EARS 형식) |
+| `/moai run` | impl | SPEC 기반 DDD 구현 |
+| `/moai sync` | docs, pr | 문서 동기화 + PR 생성 |
+| `/moai fix` | - | 오류 자동 수정 (1회) |
+| `/moai loop` | - | 반복 자동 수정 (완료까지) |
+| `/moai project` | init | 프로젝트 문서 생성 |
+| `/moai feedback` | fb, bug, issue | GitHub 이슈 생성 |
+| `/moai [자연어]` | - | 전체 자율 파이프라인 (plan→run→sync) |
+
+---
+
+## 실행 모드 플래그
+
+모든 `/moai` 커맨드에 적용 가능한 플래그:
+
+| 플래그 | 효과 |
+|--------|------|
+| `--team` | Agent Teams 모드 강제 (병렬 실행) |
+| `--solo` | 서브에이전트 모드 강제 (단일 에이전트) |
+| `--ultrathink` | Sequential Thinking MCP 활성화 (깊은 분석) |
+| `--resume SPEC-XXX` | 중단된 워크플로우 재개 |
+| `--worktree` | 격리된 git worktree에서 실행 |
+| `--branch` | 기능 브랜치 생성 |
+| `--pr` | PR 자동 생성 |
+| `--loop` | 반복 수정 활성화 |
+| `--max N` | 최대 반복 횟수 설정 |
+
+---
+
+*마지막 업데이트: 2026-02-23*
+*참조: Claude Code MoAI-ADK v2.0.0*

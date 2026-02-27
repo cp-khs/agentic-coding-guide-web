@@ -1,0 +1,143 @@
+# Phase 1: 프로젝트 구성 (30분)
+
+## 2.2 첫 번째 지시: CLAUDE.md 생성
+
+다음 프로젝트를 위한 CLAUDE.md 파일을 생성해줘.
+
+프로젝트명: TaskFlow (팀 태스크 관리 웹앱)
+기술 스택:
+- 백엔드: Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic, JWT 인증
+- 프론트엔드: Next.js 15 (App Router), TypeScript, Tailwind CSS
+- DB: PostgreSQL 16
+- 인프라: Docker, Docker Compose
+
+주요 기능: 사용자 인증, 프로젝트 관리, 태스크 CRUD (칸반 보드), 담당자 배정, 댓글, 대시보드
+
+코딩 컨벤션:
+- 백엔드: PEP 8, type hint 필수, async/await 패턴
+- 프론트엔드: ESLint + Prettier, 함수형 컴포넌트, Server Components 우선
+- 커밋: Conventional Commits
+- 변경 전 반드시 git branch 생성
+- API 엔드포인트는 테스트와 함께 작성
+
+---
+
+## 2.3 프로젝트 스캐폴딩
+
+**중요: 다음 디렉토리 구조를 정확히 따라서 생성해줘.**
+
+이 프로젝트의 전체 디렉토리 구조를 만들어줘.
+백엔드와 프론트엔드를 분리하고, Docker Compose로 통합 개발 환경을 구성해줘.
+
+### 필수 디렉토리 구조:
+
+```
+project-root/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── api/          # API 라우터
+│   │   ├── models/       # SQLAlchemy 모델
+│   │   ├── schemas/      # Pydantic 스키마
+│   │   ├── services/     # 비즈니스 로직
+│   │   └── core/         # 설정, 보안, DB
+│   ├── tests/
+│   ├── alembic/
+│   ├── pyproject.toml
+│   └── alembic.ini
+│
+├── frontend/
+│   ├── app/              # Next.js App Router
+│   ├── components/
+│   ├── lib/
+│   ├── public/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── next.config.js
+│
+├── docker/
+│   ├── backend.Dockerfile
+│   └── frontend.Dockerfile
+│
+├── docker-compose.yml
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+### 필수 파일들:
+
+1. **backend/** - FastAPI 앱 (위 구조대로)
+2. **frontend/** - Next.js 앱
+3. **docker/** - Dockerfile들 (backend.Dockerfile, frontend.Dockerfile)
+4. **docker-compose.yml** - 백엔드, 프론트엔드, PostgreSQL 서비스 (db, backend, frontend)
+5. **.env.example** - 환경 변수 템플릿
+6. **각 서비스의 기본 설정 파일** (pyproject.toml, package.json 등)
+
+---
+
+## 2.4 서브에이전트 정의
+
+**중요: 다음 경로와 파일명을 정확히 따라서 생성해줘.**
+
+`.claude/agents/` 디렉토리를 만들고 다음 서브에이전트를 정의해줘.
+
+**필수 요구사항:**
+- 각 파일은 반드시 맨 앞에 YAML frontmatter(name, description, tools)를 포함해야 해
+- Frontmatter가 없으면 서브에이전트로 인식되지 않아
+
+**Frontmatter 예시:**
+```markdown
+---
+name: Backend Developer
+description: FastAPI 백엔드 개발 전문가
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
+---
+
+# Backend Developer
+
+...
+```
+
+### 생성할 서브에이전트 파일:
+
+1. **.claude/agents/backend-developer.md**
+   - name: Backend Developer
+   - FastAPI 백엔드 전문
+   - tools: Read, Write, Edit, Bash, Glob, Grep
+
+2. **.claude/agents/frontend-developer.md**
+   - name: Frontend Developer
+   - Next.js 프론트엔드 전문
+   - tools: Read, Write, Edit, Bash, Glob, Grep
+
+3. **.claude/agents/qa-engineer.md**
+   - name: QA Engineer
+   - 테스트 작성 및 품질 검증
+   - tools: Read, Write, Edit, Bash, Glob, Grep
+
+4. **.claude/agents/code-reviewer.md**
+   - name: Code Reviewer
+   - 코드 리뷰 (읽기 전용)
+   - tools: Read, Grep, Glob
+
+5. **.claude/agents/devops-engineer.md**
+   - name: DevOps Engineer
+   - Docker, CI/CD 설정
+   - tools: Read, Write, Edit, Bash, Glob, Grep
+
+각 에이전트의 역할, 규칙, 출력 형식을 상세하게 작성해줘.
+
+---
+
+## 2.5 Git 초기 커밋
+
+현재까지의 작업을 git으로 커밋해줘.
+커밋 메시지: "chore: initial project scaffolding with CLAUDE.md and agent definitions"
