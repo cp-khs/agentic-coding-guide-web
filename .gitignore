@@ -7,3 +7,13 @@ node_modules/
 .env.production.local
 .env.development.local
 .vercel
+
+# TypeScript build cache
+tsconfig.tsbuildinfo
+
+# Presentation files (not part of web docs)
+*.pptx
+public/files/
+
+# Internal notes (not for web publication)
+notes/
