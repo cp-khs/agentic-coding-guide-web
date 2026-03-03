@@ -10,7 +10,7 @@
 ## 목차
 
 1. [에이전틱 코딩이란?](#1-에이전틱-코딩이란)
-2. [Claude Code 소개 및 설치](#2-claude-code-소개-및-설치)
+2. [Claude Code 소개](#2-claude-code-소개)
 3. [핵심 개념: CLAUDE.md, 서브에이전트, 에이전트 팀](#3-핵심-개념)
 4. [실전 팁과 안티패턴](#4-실전-팁과-안티패턴)
 5. [부록](#5-부록)
@@ -84,7 +84,7 @@ flowchart TB
 
 ---
 
-## 2. Claude Code 소개 및 설치
+## 2. Claude Code 소개
 
 ### 2.1 Claude Code란?
 
@@ -99,57 +99,7 @@ Claude Code는 Anthropic에서 만든 터미널 기반 AI 코딩 에이전트다
 - **서브에이전트**: 특정 작업을 위한 전문화된 하위 에이전트를 생성하여 위임할 수 있다
 - **에이전트 팀**: 여러 Claude Code 인스턴스가 병렬로 협업하는 실험적 기능
 
-### 2.2 설치
-
-Claude Code 설치는 간단하다. 공식 권장 방법은 네이티브 바이너리 설치다.
-
-```bash
-# macOS / Linux (권장)
-curl -fsSL https://claude.ai/install.sh | bash
-
-# 설치 후 셸 설정 리로드
-source ~/.bashrc   # bash 사용자
-source ~/.zshrc    # zsh 사용자
-
-# 설치 확인
-claude --version
-claude doctor      # 설치 상태 진단
-```
-
-> **참고 링크**
-> - 공식 설치 가이드: https://code.claude.com/docs/en/setup
-> - 트러블슈팅 가이드: https://code.claude.com/docs/en/troubleshooting
-
-### 2.3 인증 및 요금제
-
-Claude Code를 사용하려면 다음 중 하나가 필요하다.
-
-- **Claude Pro 또는 Max 플랜** (권장): claude.ai 계정으로 통합 로그인
-- **Anthropic API 콘솔**: API 키 기반 인증 (console.anthropic.com)
-- **Claude for Teams / Enterprise**: 팀 단위 중앙 관리
-
-```bash
-# 프로젝트 디렉토리에서 Claude Code 시작
-cd your-project
-claude
-
-# 첫 실행 시 인증 프로세스가 자동으로 시작된다
-```
-
-### 2.4 모델 선택
-
-Claude Code에서 사용할 모델을 선택할 수 있다. 에이전틱 코딩의 품질에 직접적인 영향을 미치므로 적절한 모델을 선택하는 것이 중요하다.
-
-| 모델 | 특징 | 권장 용도 |
-|------|------|-----------|
-| Claude Opus 4.6 | 최고 성능, 1M 토큰 컨텍스트, 에이전트 팀 지원 | 복잡한 아키텍처 설계, 멀티 에이전트 작업 |
-| Claude Sonnet 4.5 | 성능과 속도의 균형 | 일반 개발, 일상적 코딩 작업 |
-| Claude Haiku 4.5 | 빠른 응답 | 간단한 수정, 빠른 질의 |
-
-```bash
-# 모델 설정 (환경 변수)
-export ANTHROPIC_MODEL="claude-sonnet-4-5-20250929"
-```
+설치 방법, 인증 및 요금제, 모델 선택에 대한 자세한 내용은 [설치 가이드](/claude-code/installation)를 참고한다.
 
 ---
 
