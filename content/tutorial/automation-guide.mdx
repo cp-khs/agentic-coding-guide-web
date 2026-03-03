@@ -42,21 +42,15 @@ Claude Code를 활용하여 TaskFlow 프로젝트 튜토리얼을 **자동으로
 
 이 도구는 **Headless Mode**를 활용합니다:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                  실행 흐름                                │
-│                                                         │
-│  1. Phase 프롬프트 파일 읽기 (phases/01-*.md)            │
-│           ↓                                             │
-│  2. Claude Code 실행 (claude -p "...")                  │
-│           ↓                                             │
-│  3. 같은 세션 유지 (--resume)                            │
-│           ↓                                             │
-│  4. 결과 검증 (validators/validate-*.sh)                │
-│           ↓                                             │
-│  5. 다음 Phase 진행                                      │
-└─────────────────────────────────────────────────────────┘
-```
+<Mermaid>{`
+flowchart TD
+    A["1. Phase 프롬프트 파일 읽기 (phases/01-*.md)"]
+    B["2. Claude Code 실행 (claude -p \"...\")"]
+    C["3. 같은 세션 유지 (--resume)"]
+    D["4. 결과 검증 (validators/validate-*.sh)"]
+    E["5. 다음 Phase 진행"]
+    A --> B --> C --> D --> E
+`}</Mermaid>
 
 ---
 

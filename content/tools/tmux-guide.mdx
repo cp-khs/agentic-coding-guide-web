@@ -64,19 +64,27 @@ tmux -V
 
 tmux는 3가지 계층 구조로 동작합니다:
 
-```
-┌─────────────────────────────────────────┐
-│  서버 (Server)                           │
-│  ├── 세션 (Session) : "project-a"        │
-│  │   ├── 윈도우 (Window) : "coding"      │
-│  │   │   ├── 패널 (Pane) : vim           │
-│  │   │   └── 패널 (Pane) : 터미널        │
-│  │   └── 윈도우 (Window) : "testing"     │
-│  │       └── 패널 (Pane) : npm test      │
-│  └── 세션 (Session) : "project-b"        │
-│      └── ...                             │
-└─────────────────────────────────────────┘
-```
+<Mermaid>{`
+flowchart TD
+    Server["서버 (Server)"]
+    SessionA["세션 (Session): project-a"]
+    SessionB["세션 (Session): project-b"]
+    WindowCoding["윈도우 (Window): coding"]
+    WindowTesting["윈도우 (Window): testing"]
+    PaneVim["패널 (Pane): vim"]
+    PaneTerm["패널 (Pane): 터미널"]
+    PaneTest["패널 (Pane): npm test"]
+    More["..."]
+
+    Server --> SessionA
+    Server --> SessionB
+    SessionA --> WindowCoding
+    SessionA --> WindowTesting
+    WindowCoding --> PaneVim
+    WindowCoding --> PaneTerm
+    WindowTesting --> PaneTest
+    SessionB --> More
+`}</Mermaid>
 
 - **세션(Session)**: 프로젝트 단위. 여러 윈도우를 포함
 - **윈도우(Window)**: 탭처럼 동작. 한 세션 안에서 전환 가능
