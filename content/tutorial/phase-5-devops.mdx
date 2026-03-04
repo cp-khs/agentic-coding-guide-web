@@ -1,10 +1,12 @@
 # Phase 5: DevOps 및 QA (30분)
 
-## 6.1 Docker 환경 최적화
+## 1.1 Docker 환경 최적화
 
+```
 devops-engineer 서브에이전트를 사용해서 다음을 수행해줘:
 
 **중요: 다음 디렉토리 구조를 정확히 따라줘:**
+```
 
 ### Dockerfile 위치 및 구조
 
@@ -56,8 +58,9 @@ devops-engineer 서브에이전트를 사용해서 다음을 수행해줘:
 
 ---
 
-## 6.2 CI/CD 파이프라인
+## 1.2 CI/CD 파이프라인
 
+```
 GitHub Actions 워크플로우 파일을 만들어줘.
 
 .github/workflows/ci.yml:
@@ -65,11 +68,13 @@ GitHub Actions 워크플로우 파일을 만들어줘.
 - 백엔드 린트 (ruff) + 테스트 (pytest)
 - 프론트엔드 린트 (eslint) + 타입 체크 + 빌드
 - PostgreSQL 서비스 컨테이너 사용
+```
 
 ---
 
-## 6.3 최종 통합 테스트
+## 1.3 최종 통합 테스트
 
+```
 qa-engineer 서브에이전트를 사용해서 전체 통합 테스트를 수행해줘.
 
 1. Docker Compose로 전체 서비스를 올려서 E2E 테스트
@@ -81,3 +86,98 @@ qa-engineer 서브에이전트를 사용해서 전체 통합 테스트를 수행
    - 권한 없는 프로젝트/태스크 접근
    - 잘못된 입력값
 4. 테스트 결과 보고서 생성
+```
+
+**✅ Phase 5 체크포인트**
+
+- [ ] 최적화된 Dockerfiles
+- [ ] GitHub Actions CI 파이프라인
+- [ ] 통합 테스트 통과
+- [ ] Docker Compose로 전체 서비스 기동 확인
+
+### 🔍 완료 확인 방법
+
+**방법 1: Docker 최적화 확인**
+```
+"Dockerfile이 최적화되었는지 확인해줘.
+- 멀티스테이지 빌드가 적용되었나?
+- .dockerignore 파일이 있나?
+- 비루트 사용자로 실행되나?
+- 헬스체크가 설정되었나?"
+```
+
+**방법 2: CI/CD 파이프라인 확인**
+```
+"GitHub Actions 워크플로우 파일을 보여줘.
+어떤 단계들이 포함되어 있고, 언제 실행되는가?"
+```
+
+또는 직접 확인:
+```bash
+# CI/CD 워크플로우 파일 확인
+cat .github/workflows/ci.yml
+
+# Docker 파일 확인
+ls -la docker/ backend/Dockerfile frontend/Dockerfile
+cat docker-compose.yml
+```
+
+**방법 3: 전체 서비스 실행 테스트**
+```
+"Docker Compose로 전체 서비스를 실행해줘.
+그리고 각 서비스가 정상적으로 기동되는지 확인해줘."
+```
+
+직접 실행:
+```bash
+# 전체 서비스 시작
+docker-compose up -d
+
+# 서비스 상태 확인
+docker-compose ps
+
+# 로그 확인
+docker-compose logs -f
+
+# 헬스체크 확인
+docker-compose exec backend curl http://localhost:8000/health
+docker-compose exec frontend curl http://localhost:3000
+
+# 서비스 접속 테스트
+# 백엔드: http://localhost:8000/docs
+# 프론트엔드: http://localhost:3000
+```
+
+**방법 4: 통합 테스트 확인**
+```
+"전체 통합 테스트를 실행해줘.
+주요 사용자 시나리오(회원가입 → 로그인 → 프로젝트 생성 → 태스크 관리)가
+모두 통과하는지 확인해줘."
+```
+
+**방법 5: 프로덕션 준비 체크리스트**
+```
+"프로덕션 배포를 위한 체크리스트를 만들어줘.
+빠진 부분이나 개선이 필요한 부분이 있는지 검토해줘."
+```
+
+**다음 단계로 진행해도 되는 경우:**
+- ✅ Docker Compose로 전체 스택이 정상 실행됨
+- ✅ 백엔드 API가 정상 응답함 (http://localhost:8000/docs 접속 가능)
+- ✅ 프론트엔드가 정상 렌더링됨 (http://localhost:3000 접속 가능)
+- ✅ 주요 기능(회원가입, 로그인, 프로젝트/태스크 관리)이 E2E로 작동함
+- ✅ CI/CD 워크플로우 파일이 있고 문법 오류가 없음
+- ✅ Docker 이미지 빌드가 성공함
+
+**최종 확인:**
+```bash
+# 전체 빌드 테스트
+docker-compose build
+
+# 성공하면 Phase 5 완료!
+docker-compose up -d
+docker-compose ps
+# 모든 서비스가 "Up (healthy)" 상태여야 함
+```
+
+**축하합니다!** 이제 Claude Code를 활용한 에이전틱 코딩으로 풀스택 애플리케이션을 완성했습니다.

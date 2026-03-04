@@ -1,33 +1,99 @@
 # Phase 2: 백엔드 구현 (60분)
 
-## 3.1 데이터베이스 모델 및 마이그레이션
+### 📝 프롬프트 작성 가이드: 상세 vs 간략
 
-**중요: 다음 디렉토리 구조를 따라서 생성해줘.**
+Phase 2부터는 많은 섹션에서 **두 가지 프롬프트 옵션**을 제공한다. 상황에 맞게 선택하면 된다.
 
-백엔드 데이터베이스 모델을 `backend/app/models/` 디렉토리에 구현해줘.
+#### 상세 버전을 선택할 때:
+- **예측 가능한 결과**가 필요할 때 (튜토리얼 따라하기)
+- **특정 라이브러리나 패턴**을 명시하고 싶을 때
+- **프로젝트의 핵심 구조**를 정의할 때 (데이터 모델, 아키텍처)
+- **학습 목적**으로 정확한 결과를 확인하고 싶을 때
 
-### 필요한 모델 파일:
+#### 간략 버전을 선택할 때:
+- **에이전트의 판단을 신뢰**하고 더 나은 구현을 기대할 때
+- **표준 패턴**(CRUD, JWT 인증, REST API)을 사용할 때
+- **빠른 프로토타이핑**이 목적일 때
+- **초보자**로서 위압적이지 않은 지시를 원할 때
 
-- `backend/app/models/__init__.py` (모델들을 export)
-- `backend/app/models/user.py` - User 모델
-- `backend/app/models/project.py` - Project, ProjectMember 모델
-- `backend/app/models/task.py` - Task, Comment 모델
+#### 섞어 써도 될까?
 
-### 모델 요구사항:
+**네, 자유롭게 섞어 쓸 수 있습니다.** 각 섹션은 독립적인 작업이므로 이전 프롬프트의 스타일이 다음 결과에 영향을 주지 않습니다. Claude Code는 **이전 프롬프트의 상세도**가 아니라 **이미 생성된 코드**를 기준으로 판단합니다.
 
-- **User**: 사용자 정보 (이메일, 비밀번호, 이름)
-- **Project**: 프로젝트 정보와 소유자 관계
-- **ProjectMember**: 프로젝트 멤버십과 역할 (owner/admin/member)
-- **Task**: 태스크 정보 (제목, 설명, 상태, 우선순위, 담당자)
-  * status는 todo/in_progress/done으로 해줘
-- **Comment**: 태스크에 대한 댓글
+예를 들어:
+- 1.1 데이터베이스 모델 (상세) → 프로젝트의 기초 구조이므로 명확히 정의
+- 1.2 인증 시스템 (간략) → 표준 패턴이므로 에이전트에게 위임
+- 1.3 API 엔드포인트 (간략) → REST 규칙을 따르면 충분
+- 4.3 칸반 보드 (상세) → 복잡한 UI이므로 컴포넌트 구조 명시
 
-Alembic으로 마이그레이션 설정도 함께 해줘 (`backend/alembic/`).
+**핵심**: 일관성보다는 각 작업의 성격에 맞게 선택하는 것이 중요하다.
 
 ---
 
-## 3.2 인증 시스템
+## 1.1 데이터베이스 모델 및 마이그레이션
 
+**옵션 1: 상세 버전** (모든 필드를 명시적으로 지정)
+
+```
+백엔드 데이터베이스 모델을 구현해줘.
+
+모델: User, Project, ProjectMember, Task, Comment
+
+요구사항:
+- SQLAlchemy 2.0 스타일 (Mapped, mapped_column)
+- User: email(unique), hashed_password, name, created_at
+- Project: name, description, owner_id(FK→User), created_at
+- ProjectMember: user_id(FK), project_id(FK), role(enum: owner/admin/member)
+- Task: title, description, status(enum: todo/in_progress/done),
+  priority(enum: low/medium/high/critical), project_id(FK),
+  assignee_id(FK→User, nullable), created_at, updated_at
+- Comment: content, task_id(FK), author_id(FK→User), created_at
+
+Alembic 마이그레이션도 설정하고 초기 마이그레이션을 생성해줘.
+```
+
+**옵션 2: 간략 버전** (핵심만 전달하고 세부사항은 에이전트에게 위임)
+
+```
+백엔드 데이터베이스 모델을 구현해줘.
+
+필요한 모델: User, Project, ProjectMember, Task, Comment
+
+주요 기능:
+- User: 사용자 정보 (이메일, 비밀번호, 이름)
+- Project: 프로젝트 정보와 소유자 관계
+- ProjectMember: 프로젝트 멤버십과 역할 (owner/admin/member)
+- Task: 태스크 정보 (제목, 설명, 상태, 우선순위, 담당자)
+  * status는 todo/in_progress/done으로 해줘
+- Comment: 태스크에 대한 댓글
+
+Alembic으로 마이그레이션 설정도 함께 해줘.
+```
+
+**💡 에이전틱 코딩 팁**: 옵션 2처럼 간략하게 지시해도 Claude Code는 실무에 적합한 필드들을 자동으로 추가한다. "무엇을" 만들지에 집중하고 "어떻게"는 에이전트에게 맡기는 것이 에이전틱 코딩의 핵심이다. 각 파일 생성마다 승인을 요청할 수 있는데, 신뢰가 쌓이면 auto-accept 모드를 활용할 수도 있다.
+
+## 1.2 인증 시스템
+
+**옵션 1: 상세 버전**
+
+```
+JWT 기반 인증 시스템을 구현해줘.
+
+포함할 것:
+- POST /api/auth/register - 회원가입
+- POST /api/auth/login - 로그인 (JWT 토큰 발급)
+- GET /api/auth/me - 현재 사용자 정보
+- 비밀번호 해싱: passlib + bcrypt
+- JWT: python-jose
+- Pydantic 스키마 정의
+- 의존성 주입으로 현재 사용자 가져오기 (get_current_user)
+
+테스트도 함께 작성해줘 (pytest + httpx AsyncClient)
+```
+
+**옵션 2: 간략 버전**
+
+```
 JWT 기반 인증 시스템을 구현해줘.
 
 필요한 기능:
@@ -38,11 +104,41 @@ JWT 기반 인증 시스템을 구현해줘.
 - 인증이 필요한 엔드포인트에서 사용할 의존성 함수
 
 테스트도 함께 작성해줘.
+```
 
----
+## 1.3 핵심 API 엔드포인트
 
-## 3.3 핵심 API 엔드포인트
+**옵션 1: 상세 버전**
 
+```
+다음 API를 구현해줘. 각 API는 Pydantic 스키마, 서비스 레이어, 라우터, 테스트를 모두 포함해야 해.
+
+프로젝트 API:
+- POST /api/projects - 프로젝트 생성
+- GET /api/projects - 내 프로젝트 목록
+- GET /api/projects/{id} - 프로젝트 상세
+- PUT /api/projects/{id} - 프로젝트 수정
+- DELETE /api/projects/{id} - 프로젝트 삭제
+- POST /api/projects/{id}/members - 멤버 추가
+
+태스크 API:
+- POST /api/projects/{project_id}/tasks - 태스크 생성
+- GET /api/projects/{project_id}/tasks - 태스크 목록 (필터링, 정렬)
+- GET /api/tasks/{id} - 태스크 상세
+- PUT /api/tasks/{id} - 태스크 수정
+- PATCH /api/tasks/{id}/status - 상태 변경
+- DELETE /api/tasks/{id} - 태스크 삭제
+
+댓글 API:
+- POST /api/tasks/{task_id}/comments - 댓글 작성
+- GET /api/tasks/{task_id}/comments - 댓글 목록
+
+모든 엔드포인트는 인증이 필요하고, 프로젝트 멤버만 접근 가능해야 해.
+```
+
+**옵션 2: 간략 버전**
+
+```
 프로젝트와 태스크 관리를 위한 REST API를 구현해줘.
 
 프로젝트 API:
@@ -59,10 +155,66 @@ JWT 기반 인증 시스템을 구현해줘.
 
 모든 엔드포인트는 인증 필요, 프로젝트 멤버만 접근 가능하게 해줘.
 각 API는 Pydantic 스키마, 서비스 레이어, 라우터, 테스트를 포함해야 해.
+```
 
----
+**💡 중요**: 이 규모의 지시는 Claude Code가 상당한 양의 코드를 생성하게 된다. 중간중간 생성된 코드를 확인하고, 방향이 맞는지 피드백을 주어라. "이 서비스 레이어에서 권한 체크 로직을 보여줘"처럼 특정 부분을 확인하는 것이 효과적이다.
 
-## 3.5 테스트 실행 및 수정
+## 1.4 Plan Mode 활용하기
 
+복잡한 구현을 지시하기 전에 **Plan Mode**를 활용하면 에이전트가 먼저 계획을 세우고, 개발자가 검토한 후에 실행으로 넘어갈 수 있다.
+
+```
+# Claude Code에서 Shift+Tab 두 번 → Plan Mode 전환
+
+태스크 API의 필터링과 정렬 기능을 어떻게 구현할 계획인지 설명해줘.
+쿼리 파라미터 설계, 서비스 레이어 로직, 페이지네이션 전략을 포함해서.
+```
+
+Plan Mode에서 계획을 확인하고 수정한 뒤, 다시 일반 모드로 전환하여 실행을 지시한다.
+
+## 1.5 테스트 실행 및 수정
+
+```
 백엔드 테스트를 전부 실행하고, 실패하는 테스트가 있으면 수정해줘.
 Docker Compose로 PostgreSQL을 띄운 상태에서 테스트해야 해.
+```
+
+Claude Code는 테스트를 실행하고, 실패한 테스트를 분석하여 코드를 수정하는 과정을 자율적으로 반복한다. 이것이 에이전틱 코딩의 핵심적인 강점이다 — 반복적인 디버깅 사이클을 에이전트가 자동으로 수행한다.
+
+**✅ Phase 2 체크포인트**
+
+- [ ] SQLAlchemy 모델 5개 + Alembic 마이그레이션
+- [ ] JWT 인증 시스템 (register, login, me)
+- [ ] 프로젝트 CRUD API + 멤버 관리
+- [ ] 태스크 CRUD API + 상태 관리
+- [ ] 댓글 API
+- [ ] pytest 테스트 코드 (전체 통과)
+
+### 🔍 완료 확인 방법
+
+**방법 1: 테스트 실행 확인**
+```
+"백엔드 테스트가 모두 통과했나? 실행 결과를 보여줘."
+```
+
+**방법 2: API 엔드포인트 확인**
+```
+"구현된 API 엔드포인트 목록을 보여줘.
+/api/auth/, /api/projects/, /api/tasks/ 경로가 있나?"
+```
+
+**방법 3: 파일 구조 확인**
+```
+"backend/app/models/ 디렉토리에 어떤 파일들이 있나?
+User, Project, Task 모델이 모두 있나?"
+```
+
+**방법 4: 기능 테스트 요청**
+```
+"다음 시나리오를 테스트해줘:
+1. 회원가입 API 호출
+2. 로그인으로 토큰 발급
+3. 토큰으로 프로젝트 생성"
+```
+
+**판단 기준**: 모든 테스트가 통과하고 Claude가 "정상 작동"을 확인하면 다음 Phase로 진행하세요.
