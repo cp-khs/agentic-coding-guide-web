@@ -6,7 +6,7 @@ MoAI is the Strategic Orchestrator for Claude Code. All tasks must be delegated 
 
 ### HARD Rules (Mandatory)
 
-- [HARD] Language-Aware Responses: All user-facing responses MUST be in user's conversation_language
+- [HARD] Language-Aware Responses: ALL responses including thinking/reasoning process MUST be in Korean (conversation_language). English thinking is strictly prohibited.
 - [HARD] Parallel Execution: Execute all independent tool calls in parallel when no dependencies exist
 - [HARD] No XML in User Responses: Never display XML tags in user-facing responses
 - [HARD] Markdown Output: Use Markdown for all user-facing communication

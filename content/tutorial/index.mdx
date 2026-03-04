@@ -25,24 +25,39 @@
 
 ## 1.3 핵심 기능
 
-<Mermaid>{`
-mindmap
-  root((TaskFlow))
-    인증
-      회원가입 / 로그인
-      JWT 토큰 기반 인증
-    프로젝트
-      프로젝트 생성 / 조회 / 수정 / 삭제
-      멤버 초대 및 역할 관리
-    태스크
-      태스크 CRUD
-      상태 관리 Todo → In Progress → Done
-      담당자 배정
-      우선순위 Low / Medium / High / Critical
-      댓글
-    대시보드
-      프로젝트별 태스크 현황 요약
-`}</Mermaid>
+
+<div style={{border:'1px solid #e5e7eb',borderRadius:'8px',overflow:'hidden',margin:'1rem 0'}}>
+  <div style={{borderBottom:'1px solid #e5e7eb',padding:'8px 16px',textAlign:'center',fontWeight:'bold'}}>TaskFlow 기능 맵</div>
+  <div style={{padding:'12px 20px',lineHeight:'1.75'}}>
+
+    <div style={{display:'flex',gap:'6px',alignItems:'center'}}><span style={{width:'1.4em',flexShrink:0}}>🔐</span><strong>인증</strong></div>
+    <div className="tree-group">
+      <div className="tree-item">회원가입 / 로그인</div>
+      <div className="tree-item">JWT 토큰 기반 인증</div>
+    </div>
+
+    <div style={{display:'flex',gap:'6px',alignItems:'center'}}><span style={{width:'1.4em',flexShrink:0}}>📋</span><strong>프로젝트</strong></div>
+    <div className="tree-group">
+      <div className="tree-item">프로젝트 생성 / 조회 / 수정 / 삭제</div>
+      <div className="tree-item">멤버 초대 및 역할 관리</div>
+    </div>
+
+    <div style={{display:'flex',gap:'6px',alignItems:'center'}}><span style={{width:'1.4em',flexShrink:0}}>✅</span><strong>태스크</strong></div>
+    <div className="tree-group">
+      <div className="tree-item">태스크 CRUD</div>
+      <div className="tree-item">상태 관리 (Todo → In Progress → Done)</div>
+      <div className="tree-item">담당자 배정</div>
+      <div className="tree-item">우선순위 (Low / Medium / High / Critical)</div>
+      <div className="tree-item">댓글</div>
+    </div>
+
+    <div style={{display:'flex',gap:'6px',alignItems:'center'}}><span style={{width:'1.4em',flexShrink:0}}>📊</span><strong>대시보드</strong></div>
+    <div className="tree-group">
+      <div className="tree-item">프로젝트별 태스크 현황 요약</div>
+    </div>
+
+  </div>
+</div>
 
 ## 1.4 데이터 모델 (ERD)
 

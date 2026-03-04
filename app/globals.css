@@ -1,0 +1,61 @@
+/*
+ * Fix box-drawing character alignment in code blocks.
+ * Browsers fall back to a different font for Unicode box-drawing chars (U+2500-U+257F),
+ * causing width mismatches. Explicitly prioritize fonts with consistent box-drawing support.
+ */
+/*
+ * Tree list component for feature maps.
+ * Renders ├─ and └─ connectors via CSS pseudo-elements,
+ * avoiding box-drawing character width issues.
+ */
+.tree-group {
+  margin-left: 0.7em;
+  margin-bottom: 0.75em;
+}
+
+.tree-item {
+  position: relative;
+  padding-left: 1.2em;
+  line-height: 1.75;
+}
+
+/* vertical line running through all items */
+.tree-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid #9ca3af;
+}
+
+/* horizontal branch line */
+.tree-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.875em;
+  width: 0.7em;
+  height: 1px;
+  background: #9ca3af;
+}
+
+/* last item: cut vertical line at mid-point (└─) */
+.tree-item:last-child::before {
+  bottom: 50%;
+}
+
+pre,
+pre code,
+code {
+  font-family:
+    'Cascadia Code',
+    'Cascadia Mono',
+    'JetBrains Mono',
+    'Fira Code',
+    'Source Code Pro',
+    'DejaVu Sans Mono',
+    ui-monospace,
+    Consolas,
+    monospace;
+}
