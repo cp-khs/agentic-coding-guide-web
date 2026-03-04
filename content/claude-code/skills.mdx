@@ -1,0 +1,189 @@
+# Skills 시스템
+
+> **Skills**는 Claude Code에 전문 지식을 주입하는 마크다운 파일 기반 시스템이다. `.claude/skills/` 디렉토리에 작성된 스킬 파일은 특정 트리거 조건이 맞을 때 자동으로 Claude의 컨텍스트에 포함되어, 해당 도메인의 전문적인 패턴과 규칙을 따르도록 안내한다.
+
+---
+
+## Skills가 필요한 이유
+
+CLAUDE.md는 프로젝트 전체에 적용되는 규칙을 담는다. 그러나 모든 규칙을 CLAUDE.md에 넣으면 파일이 비대해지고, 관련 없는 작업에도 불필요한 규칙이 로드된다.
+
+Skills는 **필요할 때만 로드되는 전문 지식 모듈**이다.
+
+| 구분 | CLAUDE.md | Skills |
+|------|-----------|--------|
+| 로드 시점 | 항상 | 트리거 조건 충족 시 |
+| 범위 | 프로젝트 전체 | 특정 도메인/작업 |
+| 용도 | 프로젝트 규칙, 컨벤션 | 전문 지식, 패턴, 레시피 |
+| 토큰 비용 | 매 요청마다 | 필요할 때만 |
+
+---
+
+## 스킬 파일 구조
+
+스킬 파일은 YAML frontmatter와 마크다운 본문으로 구성된다.
+
+```markdown
+---
+name: my-api-patterns
+description: REST API 설계 패턴과 FastAPI 구현 가이드
+triggers:
+  - FastAPI
+  - REST API
+  - endpoint
+---
+
+# REST API 패턴
+
+## 표준 응답 구조
+
+모든 API 응답은 다음 형식을 따른다.
+
+\`\`\`python
+class ApiResponse(BaseModel):
+    success: bool
+    data: Any | None = None
+    error: str | None = None
+\`\`\`
+
+## 에러 처리
+
+...
+```
+
+### Frontmatter 필드
+
+| 필드 | 필수 | 설명 |
+|------|------|------|
+| `name` | ✓ | 스킬 고유 이름 (파일명과 일치 권장) |
+| `description` | ✓ | 스킬 설명 (Claude가 언제 사용할지 판단하는 데 활용) |
+| `triggers` | 선택 | 자동 로드를 유발하는 키워드 목록 |
+
+---
+
+## 스킬 파일 위치
+
+```
+프로젝트/
+└── .claude/
+    └── skills/
+        ├── fastapi-patterns.md      # 프로젝트별 스킬
+        ├── react-components.md
+        └── database-queries.md
+
+~/.claude/
+└── skills/
+    ├── git-workflow.md              # 사용자 전체 스킬
+    └── code-review.md
+```
+
+- **프로젝트 스킬** (`.claude/skills/`): 해당 프로젝트에서만 사용
+- **사용자 스킬** (`~/.claude/skills/`): 모든 프로젝트에서 사용
+
+---
+
+## 스킬 호출 방법
+
+### 자동 로드 (트리거 기반)
+
+frontmatter의 `triggers`에 키워드를 지정하면, 사용자 입력이나 작업 내용에 해당 키워드가 포함될 때 스킬이 자동으로 로드된다.
+
+```yaml
+triggers:
+  - pytest
+  - 테스트
+  - test coverage
+```
+
+### 명시적 호출
+
+Claude에게 직접 스킬 로드를 요청할 수 있다.
+
+```
+Skill("my-api-patterns")를 참조해서 엔드포인트를 만들어줘.
+```
+
+---
+
+## 실전 스킬 예시
+
+### 커밋 메시지 스킬
+
+```markdown
+---
+name: git-commit-conventions
+description: 팀 프로젝트의 커밋 메시지 컨벤션 가이드
+triggers:
+  - commit
+  - git
+---
+
+# 커밋 메시지 규칙
+
+## 형식
+
+\`\`\`
+<타입>(<스코프>): <제목>
+
+<본문>
+
+<푸터>
+\`\`\`
+
+## 타입 목록
+
+- feat: 새 기능
+- fix: 버그 수정
+- docs: 문서 변경
+- refactor: 리팩토링
+
+## 예시
+
+\`\`\`
+feat(auth): JWT 리프레시 토큰 구현
+
+- 액세스 토큰 만료 시 자동 재발급
+- 리프레시 토큰 7일 만료
+
+Closes #123
+\`\`\`
+```
+
+### 코드 리뷰 체크리스트 스킬
+
+```markdown
+---
+name: code-review-checklist
+description: 팀 코드 리뷰 기준과 체크리스트
+triggers:
+  - code review
+  - 코드 리뷰
+  - PR review
+---
+
+# 코드 리뷰 체크리스트
+
+## 필수 확인 항목
+
+- [ ] 에러 처리가 모든 외부 API 호출에 적용되었는가?
+- [ ] 입력값 검증이 적절한가?
+- [ ] 테스트 커버리지가 80% 이상인가?
+- [ ] 보안 취약점(SQL 인젝션, XSS 등)이 없는가?
+...
+```
+
+---
+
+## MoAI-ADK Skills
+
+MoAI-ADK는 Claude Code Skills 시스템을 확장하여 대규모 스킬 카탈로그를 제공한다. `/moai` 명령어를 통해 자동으로 로드되며, 워크플로우 전반을 지원한다.
+
+자세한 내용은 [MoAI-ADK 가이드](/tools/moai/adk-guide)와 [MoAI Skills 레퍼런스](/tools/moai/skills-reference)를 참고한다.
+
+---
+
+## 팁
+
+- 스킬 파일은 **구체적이고 실행 가능한 내용**으로 채울수록 효과적이다. 추상적인 원칙보다 코드 예시와 패턴이 더 유용하다.
+- 스킬이 너무 길면 토큰을 많이 소비한다. 하나의 스킬 파일은 **200~500줄** 이내가 적당하다.
+- 비슷한 내용을 여러 스킬에 중복 작성하지 말고, 공통 내용은 별도 스킬로 분리한 뒤 참조한다.

@@ -1,0 +1,214 @@
+# Hooks 시스템
+
+> **Hooks**는 Claude Code의 특정 이벤트 발생 시 커스텀 쉘 스크립트를 자동으로 실행하는 기능이다. 코드 저장 시 자동 린트, 커밋 전 검증, 특정 명령어 차단 같은 자동화 워크플로우를 구성할 수 있다.
+
+---
+
+## 동작 원리
+
+```
+사용자 입력 → Claude Code → [PreToolUse 훅 실행] → 도구 실행 → [PostToolUse 훅 실행] → 결과 반환
+                     ↓
+               훅 exit code 2 → 도구 실행 차단
+               훅 exit code 0 → 정상 진행
+```
+
+훅 스크립트는 다음 방식으로 Claude Code와 통신한다.
+
+| exit code | 동작 |
+|-----------|------|
+| `0` | 정상 진행 |
+| `2` | 해당 도구 실행 차단 (PreToolUse만 해당) |
+| 기타 | 경고와 함께 진행 |
+
+훅 스크립트의 **stdout**은 Claude에게 추가 컨텍스트로 전달되고, **stderr**는 로그로 기록된다.
+
+---
+
+## 이벤트 종류
+
+| 이벤트 | 발생 시점 | 주요 활용 |
+|--------|-----------|-----------|
+| `PreToolUse` | Claude가 도구를 실행하기 직전 | 위험한 명령어 차단, 실행 전 검증 |
+| `PostToolUse` | Claude가 도구를 실행한 직후 | 결과 검증, 자동 포맷팅 |
+| `SessionStart` | Claude Code 세션 시작 시 | 환경 설정, 워밍업 스크립트 |
+| `Stop` | Claude가 응답을 완료했을 때 | 후처리 작업, 알림 |
+| `SubagentStop` | 서브에이전트가 완료됐을 때 | 서브에이전트 결과 검증 |
+
+---
+
+## 설정 방법
+
+Hooks는 `~/.claude/settings.json`(전역) 또는 `.claude/settings.json`(프로젝트)에 설정한다.
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/bash-guard.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write $CLAUDE_TOOL_INPUT_FILE_PATH"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '세션 시작' >> ~/.claude/session.log"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### matcher 설정
+
+`matcher`는 어떤 도구에 훅을 적용할지 지정한다.
+
+```json
+"matcher": "Bash"          // Bash 도구만
+"matcher": "Write|Edit"    // Write 또는 Edit 도구
+"matcher": ""              // 모든 도구 (빈 문자열 = 전체 적용)
+```
+
+---
+
+## 실전 예시
+
+### 예시 1: 위험한 명령어 차단
+
+`rm -rf /`, `git push --force` 같은 위험한 명령어를 차단한다.
+
+```bash
+#!/bin/bash
+# .claude/hooks/bash-guard.sh
+
+# Claude가 실행하려는 명령어는 stdin의 JSON에서 읽을 수 있다
+COMMAND=$(cat - | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('command',''))" 2>/dev/null)
+
+# 위험 패턴 검사
+if echo "$COMMAND" | grep -qE "rm -rf /|--force|DROP TABLE"; then
+  echo "위험한 명령어가 감지되어 차단되었습니다: $COMMAND" >&2
+  exit 2
+fi
+
+exit 0
+```
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": ".claude/hooks/bash-guard.sh" }]
+      }
+    ]
+  }
+}
+```
+
+### 예시 2: 파일 저장 시 자동 포맷
+
+Python 파일을 저장할 때 자동으로 ruff 포맷터를 실행한다.
+
+```bash
+#!/bin/bash
+# .claude/hooks/auto-format.sh
+
+FILE_PATH="$CLAUDE_TOOL_INPUT_FILE_PATH"
+
+if [[ "$FILE_PATH" == *.py ]]; then
+  ruff format "$FILE_PATH" 2>/dev/null
+  ruff check --fix "$FILE_PATH" 2>/dev/null
+fi
+```
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [{ "type": "command", "command": ".claude/hooks/auto-format.sh" }]
+      }
+    ]
+  }
+}
+```
+
+### 예시 3: 세션 시작 시 환경 정보 출력
+
+Claude Code 세션 시작 시 현재 Git 브랜치와 상태를 알려준다.
+
+```bash
+#!/bin/bash
+# .claude/hooks/session-start.sh
+
+echo "현재 브랜치: $(git branch --show-current 2>/dev/null || echo 'N/A')"
+echo "변경된 파일: $(git status --short 2>/dev/null | wc -l | tr -d ' ')개"
+echo "최근 커밋: $(git log --oneline -1 2>/dev/null || echo 'N/A')"
+```
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [{ "type": "command", "command": ".claude/hooks/session-start.sh" }]
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 훅에서 사용 가능한 환경 변수
+
+훅 스크립트 실행 시 Claude Code가 자동으로 주입하는 환경 변수다.
+
+| 변수 | 설명 |
+|------|------|
+| `CLAUDE_TOOL_NAME` | 실행된 도구 이름 (Bash, Write, Edit 등) |
+| `CLAUDE_TOOL_INPUT_FILE_PATH` | 도구가 접근한 파일 경로 |
+| `CLAUDE_TOOL_INPUT_COMMAND` | Bash 도구의 실행 명령어 |
+| `CLAUDE_SESSION_ID` | 현재 세션 ID |
+
+stdin으로 전달되는 JSON을 파싱하면 더 상세한 도구 입력 정보를 얻을 수 있다.
+
+---
+
+## MoAI-ADK Hooks
+
+MoAI-ADK는 품질 게이트, 코드 분석, 에이전트 팀 조율을 위해 Hooks를 적극 활용한다. 설치 시 자동으로 설정되며, `moai hook` 명령어로 관리할 수 있다.
+
+자세한 내용은 [MoAI-ADK 가이드](/tools/moai/adk-guide)를 참고한다.
+
+---
+
+## 보안 고려사항
+
+- 훅 스크립트는 Claude Code와 **동일한 권한**으로 실행된다
+- 외부 입력(Claude가 실행하는 명령어, 파일 경로 등)을 스크립트에서 사용할 때는 **셸 인젝션** 공격에 주의한다
+- 민감한 API 키나 토큰은 훅 스크립트 내에 하드코딩하지 말고 환경 변수로 관리한다
+- `.claude/hooks/` 디렉토리를 `.gitignore`에 추가하는 것을 고려한다 (팀 환경에서 개인 훅 공유를 피하기 위해)
