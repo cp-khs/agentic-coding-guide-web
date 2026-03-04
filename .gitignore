@@ -13,6 +13,8 @@ tsconfig.tsbuildinfo
 
 # Presentation files (not part of web docs)
 *.pptx
+*.docx
+~$*.docx
 public/files/
 
 # Internal notes (not for web publication)
