@@ -1,4 +1,6 @@
 export default {
+  index: 'Claude Code 소개',
+  'usage-modes': '사용 모드 비교',
   'installation': '설치 가이드',
   'core-concepts': '핵심 개념',
   'agent-concepts': '에이전트 개념 가이드',

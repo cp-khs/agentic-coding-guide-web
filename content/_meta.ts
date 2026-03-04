@@ -1,6 +1,5 @@
 export default {
   index: '소개',
-  'getting-started': '시작하기',
   'claude-code': 'Claude Code',
   tools: '개발 도구',
   'project-management': '프로젝트 관리',
