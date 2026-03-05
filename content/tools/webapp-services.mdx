@@ -1,0 +1,276 @@
+# 웹앱 운영 서비스 모음
+
+> AI로 만든 웹앱을 배포하고 운영할 때 활용할 수 있는 서비스들을 카테고리별로 정리했습니다.
+
+---
+
+## 배포 / 호스팅
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Vercel | [vercel.com](https://vercel.com/) | 프론트엔드 특화, 자동 배포 |
+| Netlify | [netlify.com](https://netlify.com/) | 정적 사이트, 서버리스 함수 |
+| Railway | [railway.app](https://railway.app/) | 풀스택 간편 배포 |
+| Render | [render.com](https://render.com/) | 무료 티어, DB 포함 |
+| Fly.io | [fly.io](https://fly.io/) | Docker 기반, 글로벌 엣지 |
+| Heroku | [heroku.com](https://heroku.com/) | 클래식 PaaS |
+| GitHub Pages | [pages.github.com](https://pages.github.com/) | 정적 사이트 무료 |
+| Cloudflare Pages | [pages.cloudflare.com](https://pages.cloudflare.com/) | 엣지 배포, 빠른 CDN |
+| AWS Amplify | [aws.amazon.com/amplify](https://aws.amazon.com/amplify) | AWS 생태계 연동 |
+| Google Cloud Run | [cloud.google.com/run](https://cloud.google.com/run) | 컨테이너 서버리스 |
+| Azure Static Web Apps | [azure.microsoft.com](https://azure.microsoft.com/en-us/products/app-service/static) | Azure 생태계 |
+| Replit | [replit.com](https://replit.com/) | 코딩+배포 통합 |
+
+---
+
+## 데이터베이스
+
+### 관계형 (SQL)
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Supabase | [supabase.com](https://supabase.com/) | PostgreSQL 기반, Firebase 대안 |
+| PlanetScale | [planetscale.com](https://planetscale.com/) | MySQL, 브랜치 기능 |
+| Neon | [neon.tech](https://neon.tech/) | Serverless PostgreSQL |
+| Railway (Postgres) | [railway.app](https://railway.app/) | 배포와 통합 |
+| AWS RDS | [aws.amazon.com/rds](https://aws.amazon.com/rds) | 대규모 관리형 DB |
+| CockroachDB | [cockroachlabs.com](https://cockroachlabs.com/) | 분산 SQL |
+
+### NoSQL
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| MongoDB Atlas | [mongodb.com/atlas](https://mongodb.com/atlas) | 가장 인기 있는 NoSQL |
+| Firebase Firestore | [firebase.google.com](https://firebase.google.com/) | 실시간 DB, Google |
+| DynamoDB | [aws.amazon.com/dynamodb](https://aws.amazon.com/dynamodb) | AWS 서버리스 NoSQL |
+| Upstash | [upstash.com](https://upstash.com/) | Redis/Kafka 서버리스 |
+| Redis Cloud | [redis.com](https://redis.com/redis-enterprise-cloud) | 캐싱, 세션 저장 |
+
+---
+
+## 파일 / 스토리지
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| AWS S3 | [aws.amazon.com/s3](https://aws.amazon.com/s3) | 업계 표준 오브젝트 스토리지 |
+| Cloudflare R2 | [cloudflare.com/products/r2](https://www.cloudflare.com/products/r2/) | S3 호환, 무료 egress |
+| Supabase Storage | [supabase.com/storage](https://supabase.com/storage) | S3 기반, 간편 |
+| Backblaze B2 | [backblaze.com](https://www.backblaze.com/cloud-storage) | 저렴한 S3 대안 |
+| Uploadthing | [uploadthing.com](https://uploadthing.com/) | 개발자 친화적 파일 업로드 |
+| Cloudinary | [cloudinary.com](https://cloudinary.com/) | 이미지/동영상 최적화 특화 |
+| ImageKit | [imagekit.io](https://imagekit.io/) | 이미지 CDN + 변환 |
+
+---
+
+## 이메일
+
+### 트랜잭셔널 메일 (가입 확인, 알림 등)
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Resend | [resend.com](https://resend.com/) | 개발자 친화적, 최근 인기 |
+| SendGrid | [sendgrid.com](https://sendgrid.com/) | 가장 많이 쓰이는 서비스 |
+| Mailgun | [mailgun.com](https://mailgun.com/) | API 중심 |
+| AWS SES | [aws.amazon.com/ses](https://aws.amazon.com/ses) | 저렴, AWS 생태계 |
+| Postmark | [postmarkapp.com](https://postmarkapp.com/) | 전달률 높음 |
+
+### 뉴스레터 / 마케팅 메일
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Mailchimp | [mailchimp.com](https://mailchimp.com/) | 마케팅 메일 1위 |
+| ConvertKit | [convertkit.com](https://convertkit.com/) | 크리에이터 특화 |
+| Loops | [loops.so](https://loops.so/) | SaaS 스타트업 특화 |
+| Beehiiv | [beehiiv.com](https://beehiiv.com/) | 뉴스레터 특화 |
+
+---
+
+## 인증 / 보안
+
+### 인증 (Auth)
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Clerk | [clerk.com](https://clerk.com/) | 최근 가장 인기, UI 포함 |
+| Auth0 | [auth0.com](https://auth0.com/) | 엔터프라이즈 강세 |
+| Supabase Auth | [supabase.com/auth](https://supabase.com/auth) | Supabase와 통합 |
+| Firebase Auth | [firebase.google.com](https://firebase.google.com/) | Google 생태계 |
+| NextAuth.js | [next-auth.js.org](https://next-auth.js.org/) | Next.js 오픈소스 |
+| Okta | [okta.com](https://okta.com/) | 기업용 SSO |
+
+### 보안 / 방화벽
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Cloudflare WAF | [cloudflare.com/waf](https://www.cloudflare.com/waf/) | 웹 방화벽, DDoS 방어 |
+| AWS WAF | [aws.amazon.com/waf](https://aws.amazon.com/waf) | AWS 생태계 |
+| Snyk | [snyk.io](https://snyk.io/) | 코드 취약점 스캔 |
+| Dependabot | [github.com/dependabot](https://github.com/dependabot) | 패키지 취약점 자동 PR |
+| Socket.dev | [socket.dev](https://socket.dev/) | npm 패키지 보안 |
+
+### SSL / 도메인
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Cloudflare | [cloudflare.com](https://cloudflare.com/) | 무료 SSL, DNS 관리 |
+| Let's Encrypt | [letsencrypt.org](https://letsencrypt.org/) | 무료 SSL 인증서 |
+| Namecheap | [namecheap.com](https://namecheap.com/) | 도메인 등록 |
+| GoDaddy | [godaddy.com](https://godaddy.com/) | 도메인 등록 |
+
+---
+
+## 모니터링 / 로깅
+
+### 에러 트래킹
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Sentry | [sentry.io](https://sentry.io/) | 에러 추적 1위 |
+| Bugsnag | [bugsnag.com](https://bugsnag.com/) | Sentry 대안 |
+| Rollbar | [rollbar.com](https://rollbar.com/) | 실시간 에러 알림 |
+
+### 로깅
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Datadog | [datadoghq.com](https://datadoghq.com/) | 올인원 모니터링 |
+| Better Stack (Logtail) | [betterstack.com](https://betterstack.com/) | 저렴하고 깔끔한 로그 |
+| Papertrail | [papertrail.com](https://papertrail.com/) | 간단한 로그 수집 |
+| AWS CloudWatch | [aws.amazon.com/cloudwatch](https://aws.amazon.com/cloudwatch) | AWS 생태계 |
+| Grafana + Loki | [grafana.com](https://grafana.com/) | 오픈소스 자가 호스팅 |
+
+### 업타임 / 성능
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Better Uptime | [betterstack.com/uptime](https://betterstack.com/uptime) | 업타임 + 인시던트 관리 |
+| UptimeRobot | [uptimerobot.com](https://uptimerobot.com/) | 무료 업타임 모니터링 |
+| Checkly | [checklyhq.com](https://checklyhq.com/) | E2E 테스트 + 모니터링 |
+| New Relic | [newrelic.com](https://newrelic.com/) | APM 성능 분석 |
+
+---
+
+## 애널리틱스
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Google Analytics | [analytics.google.com](https://analytics.google.com/) | 가장 널리 쓰임 |
+| Plausible | [plausible.io](https://plausible.io/) | 개인정보 친화적, 경량 |
+| PostHog | [posthog.com](https://posthog.com/) | 오픈소스, 제품 분석 |
+| Mixpanel | [mixpanel.com](https://mixpanel.com/) | 이벤트 기반 분석 |
+| Amplitude | [amplitude.com](https://amplitude.com/) | 제품 성장 분석 |
+| Hotjar | [hotjar.com](https://hotjar.com/) | 히트맵, 세션 녹화 |
+| FullStory | [fullstory.com](https://fullstory.com/) | 세션 리플레이 |
+
+---
+
+## 결제
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Stripe | [stripe.com](https://stripe.com/) | 개발자 친화적 결제 1위 |
+| Paddle | [paddle.com](https://paddle.com/) | SaaS 세금 처리 포함 |
+| LemonSqueezy | [lemonsqueezy.com](https://lemonsqueezy.com/) | 인디 개발자 특화 |
+| Toss Payments | [tosspayments.com](https://tosspayments.com/) | 국내 결제 |
+| KG이니시스 | [inicis.com](https://inicis.com/) | 국내 PG사 |
+| NHN KCP | [kcp.co.kr](https://kcp.co.kr/) | 국내 PG사 |
+
+---
+
+## 알림 / 푸시
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| OneSignal | [onesignal.com](https://onesignal.com/) | 푸시 알림 1위 |
+| Novu | [novu.co](https://novu.co/) | 오픈소스 알림 인프라 |
+| Knock | [knock.app](https://knock.app/) | 멀티채널 알림 (이메일+슬랙+푸시) |
+| Firebase FCM | [firebase.google.com](https://firebase.google.com/products/cloud-messaging) | 모바일 푸시 |
+| Twilio | [twilio.com](https://twilio.com/) | SMS / 전화 알림 |
+
+---
+
+## CDN / 엣지
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Cloudflare | [cloudflare.com](https://cloudflare.com/) | 가장 인기, 무료 플랜 강력 |
+| AWS CloudFront | [aws.amazon.com/cloudfront](https://aws.amazon.com/cloudfront) | AWS 생태계 |
+| Fastly | [fastly.com](https://fastly.com/) | 엔터프라이즈 CDN |
+| Bunny.net | [bunny.net](https://bunny.net/) | 저렴한 CDN |
+
+---
+
+## AI / LLM API
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| OpenAI API | [platform.openai.com](https://platform.openai.com/) | GPT 시리즈 |
+| Anthropic API | [anthropic.com](https://anthropic.com/) | Claude 시리즈 |
+| Google Vertex AI | [cloud.google.com/vertex-ai](https://cloud.google.com/vertex-ai) | Gemini |
+| AWS Bedrock | [aws.amazon.com/bedrock](https://aws.amazon.com/bedrock) | 멀티 모델 관리형 |
+| Groq | [groq.com](https://groq.com/) | 초고속 추론 |
+| Together AI | [together.ai](https://together.ai/) | 오픈소스 모델 호스팅 |
+| Replicate | [replicate.com](https://replicate.com/) | AI 모델 마켓플레이스 |
+| Hugging Face | [huggingface.co](https://huggingface.co/) | 오픈소스 모델 허브 |
+
+---
+
+## 테스트 / CI·CD
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| GitHub Actions | [github.com/features/actions](https://github.com/features/actions) | 가장 보편적 |
+| GitLab CI | [gitlab.com](https://gitlab.com/) | GitLab 생태계 |
+| CircleCI | [circleci.com](https://circleci.com/) | 빠른 CI |
+| Playwright | [playwright.dev](https://playwright.dev/) | E2E 테스트 |
+| Cypress | [cypress.io](https://cypress.io/) | E2E 테스트 |
+| Jest | [jestjs.io](https://jestjs.io/) | 유닛 테스트 |
+| Vitest | [vitest.dev](https://vitest.dev/) | 유닛 테스트 (Vite 기반) |
+
+---
+
+## 고객 지원
+
+| 서비스 | 링크 | 특징 |
+|--------|------|------|
+| Intercom | [intercom.com](https://intercom.com/) | 채팅 + CRM |
+| Crisp | [crisp.chat](https://crisp.chat/) | 저렴한 라이브 채팅 |
+| Zendesk | [zendesk.com](https://zendesk.com/) | 티켓 기반 지원 |
+| Tawk.to | [tawk.to](https://tawk.to/) | 무료 라이브 채팅 |
+
+---
+
+## 추천 스택 조합
+
+### 스타트업 기본 스택
+
+인디 개발자나 초기 스타트업에 적합한 조합입니다. 대부분 무료 티어로 시작 가능합니다.
+
+| 역할 | 서비스 |
+|------|--------|
+| 배포 | Vercel |
+| DB + Auth | Supabase |
+| 파일 | Cloudflare R2 |
+| 메일 | Resend |
+| 에러 추적 | Sentry |
+| 결제 | Stripe |
+| 보안 / CDN | Cloudflare |
+
+### 엔터프라이즈 스택
+
+규모가 큰 서비스나 기업 환경에 적합한 조합입니다.
+
+| 역할 | 서비스 |
+|------|--------|
+| 배포 | AWS (ECS / Fargate) |
+| DB | AWS RDS |
+| 파일 | AWS S3 |
+| 메일 | AWS SES |
+| 모니터링 | Datadog |
+| 결제 | Stripe |
+| 인증 | Auth0 / Okta |
+| 보안 | AWS WAF + Cloudflare |
+
+---
+
+*최종 업데이트: 2026년 3월*
