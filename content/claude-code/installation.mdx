@@ -49,13 +49,41 @@ claude
 
 Claude Code에서 사용할 모델을 선택할 수 있다. 에이전틱 코딩의 품질에 직접적인 영향을 미치므로 적절한 모델을 선택하는 것이 중요하다.
 
+> **참고 링크**
+> - 모델 구성 가이드: https://code.claude.com/docs/ko/model-config
+
 | 모델 | 특징 | 권장 용도 |
 |------|------|-----------|
 | Claude Opus 4.6 | 최고 성능, 1M 토큰 컨텍스트, 에이전트 팀 지원 | 복잡한 아키텍처 설계, 멀티 에이전트 작업 |
 | Claude Sonnet 4.6 | 성능과 속도의 균형 | 일반 개발, 일상적 코딩 작업 |
 | Claude Haiku 4.5 | 빠른 응답 | 간단한 수정, 빠른 질의 |
 
+### opusplan (권장)
+
+`opusplan`은 **Plan Mode에서는 Opus**, **실행 시에는 Sonnet**을 자동으로 선택하는 모델 별칭이다. 복잡한 설계 결정은 Opus의 추론 능력을 활용하고, 반복적인 구현 작업은 Sonnet의 빠른 속도로 처리하여 **비용과 품질을 동시에 최적화**한다.
+
 ```bash
-# 모델 설정 (환경 변수)
+# 시작 시 opusplan 지정 (권장)
+claude --model opusplan
+
+# 환경 변수로 고정
+export ANTHROPIC_MODEL="opusplan"
+
+# 세션 중 전환
+/model opusplan
+```
+
+설정 파일(`~/.claude/settings.json`)에 영구 적용:
+
+```json
+{
+  "model": "opusplan"
+}
+```
+
+> 에이전틱 코딩에서 계획 단계의 품질이 전체 결과물을 좌우한다. opusplan은 이 트레이드오프를 자동으로 해결해주는 실용적인 선택이다.
+
+```bash
+# 단일 모델 고정이 필요한 경우
 export ANTHROPIC_MODEL="claude-sonnet-4-6"
 ```

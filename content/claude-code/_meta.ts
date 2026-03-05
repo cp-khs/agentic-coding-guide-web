@@ -8,5 +8,6 @@ export default {
   'memory-system': '메모리 시스템',
   'hooks': 'Hooks 시스템',
   'skills': 'Skills 시스템',
-  'teammate-vs-subagent': '팀원 vs 서브에이전트'
+  'teammate-vs-subagent': '팀원 vs 서브에이전트',
+  'official-docs': '공식 문서 링크 모음'
 }
